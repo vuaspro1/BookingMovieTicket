@@ -30,11 +30,11 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetTickets()
+        public IActionResult GetTickets(int page)
         {
             try
             {
-                var result = _ticketRepository.GetTickets();
+                var result = _ticketRepository.GetTickets(page);
                 return Ok(result);
             }
             catch
@@ -58,8 +58,7 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateTicket([FromQuery] int billId, [FromQuery] int seatId,
-            [FromQuery] int showTimeId, [FromBody] TicketDto ticketCreate)
+        public IActionResult CreateTicket( [FromBody] TicketDto ticketCreate)
         {
             if (ticketCreate == null)
                 return BadRequest();
@@ -68,9 +67,9 @@ namespace OrderTicketFilm.Controllers
                 return BadRequest(ModelState);
 
             var ticketMap = _mapper.Map<Ticket>(ticketCreate);
-            ticketMap.Bill = _billRepository.GetBillToCheck(billId);
-            ticketMap.Seat = _seatRepository.GetSeatToCheck(seatId);
-            ticketMap.ShowTime = _showTimeRepository.GetShowTimeToCheck(showTimeId);
+            ticketMap.Bill = _billRepository.GetBillToCheck(ticketCreate.BillId);
+            ticketMap.Seat = _seatRepository.GetSeatToCheck(ticketCreate.SeatId);
+            ticketMap.ShowTime = _showTimeRepository.GetShowTimeToCheck(ticketCreate.ShowTimeId);
 
             if (!_ticketRepository.CreateTicket(ticketMap))
             {

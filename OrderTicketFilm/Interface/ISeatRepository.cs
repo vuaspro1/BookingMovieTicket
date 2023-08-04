@@ -5,7 +5,7 @@ namespace OrderTicketFilm.Interface
 {
     public interface ISeatRepository
     {
-        ICollection<Seat> GetSeats();
+        ICollection<SeatDto> GetSeats();
         SeatDto GetSeat(int id);
         Seat GetSeatToCheck(int id);
         bool SeatExists(int id);

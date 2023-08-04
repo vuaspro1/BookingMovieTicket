@@ -52,13 +52,13 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateSeat([FromQuery] int roomId, [FromBody] SeatDto seatCreate)
+        public IActionResult CreateSeat( [FromBody] SeatDto seatCreate)
         {
             if (seatCreate == null)
                 return BadRequest();
             var seat = _seatRepository.GetSeats()
                 .Where(item => item.Name.Trim().ToUpper() == seatCreate.Name.TrimEnd().ToUpper() &&
-                item.Room.Id == roomId)
+                item.RoomId == seatCreate.RoomId)
                 .FirstOrDefault();
             if (seat != null)
             {
@@ -70,7 +70,7 @@ namespace OrderTicketFilm.Controllers
                 return BadRequest(ModelState);
 
             var seatMap = _mapper.Map<Seat>(seatCreate);
-            seatMap.Room = _roomRepository.GetRoomToCheck(roomId);
+            seatMap.Room = _roomRepository.GetRoomToCheck(seatCreate.RoomId);
 
             if (!_seatRepository.CreateSeat(seatMap))
             {
@@ -95,6 +95,7 @@ namespace OrderTicketFilm.Controllers
                 return BadRequest();
 
             var seatMap = _mapper.Map<Seat>(seatUpdate);
+            seatMap.Room = _roomRepository.GetRoomToCheck(seatUpdate.RoomId);
 
             if (!_seatRepository.UpdateSeat(seatMap))
             {

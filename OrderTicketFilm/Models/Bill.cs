@@ -7,9 +7,10 @@ namespace OrderTicketFilm.Models
         [Key]
         public int Id { get; set; }
         public int PriceTotal { get; set; }
-        public int CreateDate { get; set; }
+        public DateTime CreateDate { get; set; }
+        public int Quantity { get; set; }
         
-        public virtual ICollection<Ticket> Tickets { get; set; }
+        public virtual ICollection<Ticket>? Tickets { get; set; }
         public Customer? Customer { get; set; }
         public User? User { get; set; }
     }

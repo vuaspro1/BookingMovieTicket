@@ -22,11 +22,11 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetRooms()
+        public IActionResult GetRooms(int page)
         {
             try
             {
-                var result = _roomRepository.GetRooms();
+                var result = _roomRepository.GetRooms(page);
                 return Ok(result);
             }
             catch
@@ -64,12 +64,12 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet("getShowTimesByARoom")]
-        public IActionResult GetShowTimesByARoom(int id)
+        public IActionResult GetShowTimesByARoom(int id, int page)
         {
             if (!_roomRepository.RoomExists(id))
                 return NotFound();
 
-            var showTimes = _roomRepository.GetShowTimesByARoom(id);
+            var showTimes = _roomRepository.GetShowTimesByARoom(id, page);
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -78,11 +78,11 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateRoom([FromBody] Room roomCreate)
+        public IActionResult CreateRoom([FromBody] RoomDto roomCreate)
         {
             if (roomCreate == null)
                 return BadRequest();
-            var room = _roomRepository.GetRooms()
+            var room = _roomRepository.GetRoomsToCheck()
                 .Where(item => item.Name.Trim().ToUpper() == roomCreate.Name.TrimEnd().ToUpper())
                 .FirstOrDefault();
             if (room != null)
@@ -103,7 +103,7 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateRoom(int id, [FromBody] Room roomUpdate)
+        public IActionResult UpdateRoom(int id, [FromBody] RoomDto roomUpdate)
         {
             if (roomUpdate == null)
                 return BadRequest();

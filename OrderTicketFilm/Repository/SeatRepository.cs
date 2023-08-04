@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OrderTicketFilm.Dto;
 using OrderTicketFilm.Interface;
 using OrderTicketFilm.Models;
@@ -34,13 +35,27 @@ namespace OrderTicketFilm.Repository
         public SeatDto GetSeat(int id)
         {
             var seat = _context.Seats.Where(item => item.Id == id).FirstOrDefault();
-            return _mapper.Map<SeatDto>(seat);
+            return new SeatDto
+            {
+                Id = seat.Id,
+                Name = seat.Name,
+                Price = seat.Price,
+                Status = seat.Status,
+                RoomId = seat.Room.Id
+            };
         }
 
-        public ICollection<Seat> GetSeats()
+        public ICollection<SeatDto> GetSeats()
         {
-            var seat = _context.Seats.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<Seat>>(seat);
+            var seat = _context.Seats.Include(item => item.Room).OrderBy(c => c.Id).ToList();
+            return seat.Select(item => new SeatDto
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Price = item.Price,
+                Status = item.Status,
+                RoomId = item.Room.Id
+            }).ToList();
         }
 
         public Seat GetSeatToCheck(int id)

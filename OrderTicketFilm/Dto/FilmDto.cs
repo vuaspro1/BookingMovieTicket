@@ -1,4 +1,6 @@
-﻿namespace OrderTicketFilm.Dto
+﻿using OrderTicketFilm.Models;
+
+namespace OrderTicketFilm.Dto
 {
     public class FilmDto
     {
@@ -7,6 +9,12 @@
         public DateTime OpeningDay { get; set; }
         public string Director { get; set; }
         public string Time { get; set; }
-        public byte[] Image { get; set; }
+        public string Image { get; set; }
+        public int TypeId { get; set; }
+    }
+
+    public class FilmView : FilmDto
+    {
+        public string TypeName { get; set; }
     }
 }

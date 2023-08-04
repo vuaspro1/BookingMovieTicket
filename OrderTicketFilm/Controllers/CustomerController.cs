@@ -12,7 +12,7 @@ namespace OrderTicketFilm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class CustomerController : Controller
     {
         private readonly ICustomerRepository _customerRepository;
@@ -25,13 +25,13 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetCustomers()
+        public IActionResult GetCustomers(int page)
         {
             try
             {
                 //var result = _mapper.Map<List<CustomerDto>>(_customerRepository.GetCustomers());
                 //return Ok(result);
-                var result = _customerRepository.GetCustomers();
+                var result = _customerRepository.GetCustomers(page);
                 return Ok(result);
             }
             catch
@@ -55,9 +55,9 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet("getCustomerByName")]
-        public IActionResult GetCustomerByName(string? name)
+        public IActionResult GetCustomerByName(string? name, int page)
         {
-            var customer = _customerRepository.GetCustomerByName(name);
+            var customer = _customerRepository.GetCustomerByName(name, page);
             if (!customer.Any())
                 return NotFound();
 
@@ -68,12 +68,12 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet("getBillsByACustomer")]
-        public IActionResult GetBillsByACustomer(int id)
+        public IActionResult GetBillsByACustomer(int id, int page)
         {
             if (!_customerRepository.CustomerExists(id))
                 return NotFound();
 
-            var bills = _customerRepository.GetBillByACustomer(id);
+            var bills = _customerRepository.GetBillByACustomer(id, page);
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -86,8 +86,8 @@ namespace OrderTicketFilm.Controllers
         {
             if (customerCreate == null)
                 return BadRequest();
-            var customer = _customerRepository.GetCustomers()
-                .Where(item => item.Phone.Trim().ToUpper() == customerCreate.Phone.TrimEnd().ToUpper())
+            var customer = _customerRepository.GetCustomersToCheck()
+                .Where(item => item.Phone.Trim() == customerCreate.Phone.TrimEnd())
                 .FirstOrDefault();
             if (customer != null)
             {

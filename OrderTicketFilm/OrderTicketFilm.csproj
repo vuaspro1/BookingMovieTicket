@@ -26,7 +26,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Image\" />
+    <Folder Include="wwwroot\Image\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\Image\conan_movie_26_-_vietnamese_poster.jpg" />
+    <None Include="wwwroot\Image\elemental_teaser_poster_vietnam_1_.jpg" />
+    <None Include="wwwroot\Image\hfr-main-poster-printing.jpg" />
+    <None Include="wwwroot\Image\poster_rally_road_racers_final.jpg" />
+    <None Include="wwwroot\Image\tram-nam-500_1689062334159.jpg" />
   </ItemGroup>
 
 </Project>

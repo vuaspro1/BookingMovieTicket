@@ -44,10 +44,10 @@ namespace OrderTicketFilm.Repository
             return _mapper.Map<List<RoleDto>>(roles);
         }
 
-        public ICollection<Role> GetRolesByUser(int id)
+        public ICollection<RoleDto> GetRolesByUser(int id)
         {
             var query = _context.UserRoles.Where(item => item.UserId == id).Select(c => c.Role).ToList();
-            return _mapper.Map<List<Role>>(query);
+            return _mapper.Map<List<RoleDto>>(query);
         }
 
         public List<UserDto> GetUserByRole(int id)

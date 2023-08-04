@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OrderTicketFilm.Dto;
 using OrderTicketFilm.Interface;
 using OrderTicketFilm.Models;
+using System.Drawing.Printing;
 
 namespace OrderTicketFilm.Repository
 {
@@ -9,6 +11,7 @@ namespace OrderTicketFilm.Repository
     {
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
+        public static int PAGE_SIZE { get; set; } = 10;
 
         public TicketRepository(MyDbContext context, IMapper mapper) 
         {
@@ -31,16 +34,44 @@ namespace OrderTicketFilm.Repository
             return Save();
         }
 
-        public TicketDto GetTicket(int id)
+        public TicketView GetTicket(int id)
         {
-            var ticket = _context.Tickets.Where(item => item.Id == id).FirstOrDefault();
-            return _mapper.Map<TicketDto>(ticket);
+            var ticket = _context.Tickets.Include(item => item.Bill).Include(item => item.ShowTime)
+                .ThenInclude(item => item.Film).Include(item => item.Seat)
+                .ThenInclude(item => item.Room).Where(item => item.Id == id).FirstOrDefault();
+            return new TicketView
+            {
+                Id = ticket.Id,
+                SeatId = ticket.Seat.Id,
+                ShowTimeId = ticket.ShowTime.Id,
+                BillId = ticket.Bill.Id,
+                ShowTime = ticket.ShowTime.Time,
+                SeatName = ticket.Seat.Name,
+                FilmName = ticket.ShowTime.Film.Name,
+                RoomName = ticket.ShowTime.Room.Name,
+                Price = ticket.Seat.Price
+            };
         }
 
-        public ICollection<TicketDto> GetTickets()
+        public ICollection<TicketView> GetTickets(int page)
         {
-            var tickets = _context.Tickets.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<TicketDto>>(tickets);
+            var querys = _context.Tickets.Include(item => item.Bill).Include(item => item.ShowTime)
+                .ThenInclude(item => item.Film).Include(item => item.Seat)
+                .ThenInclude(item => item.Room).ToList();
+            var query = querys.Select(item => new TicketView
+            {
+                Id = item.Id,
+                SeatId = item.Seat.Id,
+                ShowTimeId = item.ShowTime.Id,
+                BillId = item.Bill.Id,
+                ShowTime = item.ShowTime.Time,
+                SeatName = item.Seat.Name,
+                FilmName = item.ShowTime.Film.Name,
+                RoomName = item.ShowTime.Room.Name,
+                Price = item.Seat.Price
+            }).ToList();
+            var result = PaginatedList<TicketView>.Create(query.AsQueryable(), page, PAGE_SIZE);
+            return result;
         }
 
         public bool Save()

@@ -49,26 +49,15 @@ namespace OrderTicketFilm.Controllers
             return Ok(type);
         }
 
-        [HttpGet("/films/{filmId}")]
-        public IActionResult GetTypeOfFilmByFilm(int filmId)
-        {
-            var type = _typeOfFilmRepository.GetTypeOfFilmByFilm(filmId);
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            return Ok(type);
-        }
-
         [HttpPost]
-        public IActionResult CreateType([FromBody] TypeOfFilm typeOfFilmCreate)
+        public IActionResult CreateType([FromBody] TypeOfFilmDto typeOfFilmCreate)
         {
             if (typeOfFilmCreate == null)
                 return BadRequest();
-            var customer = _typeOfFilmRepository.GetTypeOfFilms()
+            var type = _typeOfFilmRepository.GetTypeOfFilmsToCheck()
                 .Where(item => item.Name.Trim().ToUpper() == typeOfFilmCreate.Name.TrimEnd().ToUpper())
                 .FirstOrDefault();
-            if (customer != null)
+            if (type != null)
             {
                 ModelState.AddModelError("", "This type already exists");
                 return BadRequest(ModelState);
@@ -86,7 +75,7 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateType (int id, [FromBody] TypeOfFilm typeOfFilmUpdate)
+        public IActionResult UpdateType (int id, [FromBody] TypeOfFilmDto typeOfFilmUpdate)
         {
             if (typeOfFilmUpdate == null)
                 return BadRequest();
@@ -113,8 +102,6 @@ namespace OrderTicketFilm.Controllers
                 return NotFound();
             }
 
-            //var filmsToDelete = _typeOfFilmRepository.GetFilmsByAType(id);
-            //_typeOfFilmRepository.DeleteTypeOfFilm(filmsToDelete.ToList());
             _typeOfFilmRepository.DeleteTypeOfFilm(id);
 
             if (!ModelState.IsValid)

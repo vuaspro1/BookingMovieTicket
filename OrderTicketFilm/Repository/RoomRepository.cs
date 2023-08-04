@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OrderTicketFilm.Dto;
 using OrderTicketFilm.Interface;
 using OrderTicketFilm.Models;
@@ -9,6 +10,7 @@ namespace OrderTicketFilm.Repository
     {
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
+        public static int PAGE_SIZE { get; set; } = 10;
 
         public RoomRepository(MyDbContext context, IMapper mapper) 
         {
@@ -38,10 +40,16 @@ namespace OrderTicketFilm.Repository
             return _mapper.Map<RoomDto>(room);
         }
 
-        public ICollection<RoomDto> GetRooms()
+        public ICollection<RoomDto> GetRooms(int page)
         {
-            var room = _context.Rooms.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<RoomDto>>(room);
+            var rooms = _context.Rooms.OrderBy(c => c.Id).ToList();
+            var room = rooms.Select(item => new RoomDto
+            {
+                Id = item.Id,
+                Name = item.Name,
+            }).ToList();
+            var result = PaginatedList<RoomDto>.Create(room.AsQueryable(), page, PAGE_SIZE);
+            return result;
         }
 
         public Room GetRoomToCheck(int roomId)
@@ -52,14 +60,34 @@ namespace OrderTicketFilm.Repository
 
         public ICollection<SeatDto> GetSeatsByARoom(int roomId)
         {
-            var seat = _context.Seats.Where(r => r.Room.Id == roomId).ToList();
-            return _mapper.Map<List<SeatDto>>(seat);
+            var seat = _context.Seats.Include(item => item.Room).Where(r => r.Room.Id == roomId)
+                .OrderBy(item => item.Id).ToList();
+            return seat.Select(item => new SeatDto
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Price = item.Price,
+                Status = item.Status,
+                RoomId = item.Room.Id
+            }).ToList();
         }
 
-        public ICollection<ShowTimeDto> GetShowTimesByARoom(int roomId)
+        public ICollection<ShowTimeView> GetShowTimesByARoom(int roomId, int page)
         {
-            var showTime = _context.ShowTimes.Where(r => r.Room.Id == roomId).ToList();
-            return _mapper.Map<List<ShowTimeDto>>(showTime);
+            var showTimes = _context.ShowTimes.Where(r => r.Room.Id == roomId).OrderBy(r => r.Time.Date).ToList();
+            var showTime = showTimes.Select(item => new ShowTimeView
+            {
+                Id = item.Id,
+                RoomId = item.Room.Id,
+                FilmId = item.Film.Id,
+                Time = item.Time,
+                FilmName = item.Film.Name,
+                RoomName = item.Room.Name,
+                Duration = item.Film.Time,
+                Image = item.Film.Image,
+            }).ToList();
+            var result = PaginatedList<ShowTimeView>.Create(showTime.AsQueryable(), page, PAGE_SIZE);
+            return result;
         }
 
         public bool RoomExists(int id)
@@ -77,6 +105,12 @@ namespace OrderTicketFilm.Repository
         {
             _context.Update(room);
             return Save();
+        }
+
+        public ICollection<RoomDto> GetRoomsToCheck()
+        {
+            var room = _context.Rooms.ToList();
+            return _mapper.Map<List<RoomDto>>(room);
         }
     }
 }

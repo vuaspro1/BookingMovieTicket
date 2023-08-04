@@ -28,6 +28,10 @@ namespace OrderTicketFilm.Helper
             CreateMap<TypeOfFilmDto, TypeOfFilm>();
             CreateMap<Bill, BillDto>();
             CreateMap<BillDto, Bill>();
+            CreateMap<RoomStatusDto, RoomStatus>();
+            CreateMap<RoomStatus, RoomStatusDto>();
+            CreateMap<SeatStatus, SeatStatusDto>();
+            CreateMap<SeatStatusDto, SeatStatus>();
         }
     }
 }

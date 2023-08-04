@@ -5,10 +5,10 @@ namespace OrderTicketFilm.Interface
 {
     public interface IBillRepository
     {
-        ICollection<BillDto> GetBills();
-        BillDto GetBill(int id);
+        ICollection<BillView> GetBills(int page);
+        BillView GetBill(int id);
         Bill GetBillToCheck(int id);
-        ICollection<TicketDto> GetTicketsByABill(int id);
+        ICollection<TicketView> GetTicketsByABill(int id, int page);
         bool BillExists(int id);
         bool CreateBill(Bill bill);
         bool DeleteBill(int id);

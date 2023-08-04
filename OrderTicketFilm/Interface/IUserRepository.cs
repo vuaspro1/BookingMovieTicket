@@ -5,13 +5,14 @@ namespace OrderTicketFilm.Interface
 {
     public interface IUserRepository
     {
-        ICollection<UserDto> GetUsers();
+        ICollection<UserDto> GetUsers(int page);
+        ICollection<UserDto> GetUsersByName(string name, int page);
         UserDto GetUser(int id);
         User GetUserToCheck(int id);
         UserDto GetUserByPhone(string phone);
         bool UserExists(int id);
-        bool CreateUser(int roleId, User user);
-        bool UpdateUser(int roleId, User user);
+        bool CreateUser(UserDto userCreate, User user);
+        bool UpdateUser(UserDto userUpdate, User user);
         bool DeleteUser(int id);
         bool Save();
     }

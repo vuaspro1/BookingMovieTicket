@@ -5,6 +5,26 @@
       "PackagePath": "staticwebassets\\OrderTicketFilm.bundle.scp.css"
     },
     {
+      "Id": "D:\\OrderTicketFilm\\OrderTicketFilm\\wwwroot\\Image\\conan_movie_26_-_vietnamese_poster.jpg",
+      "PackagePath": "staticwebassets\\Image\\conan_movie_26_-_vietnamese_poster.jpg"
+    },
+    {
+      "Id": "D:\\OrderTicketFilm\\OrderTicketFilm\\wwwroot\\Image\\elemental_teaser_poster_vietnam_1_.jpg",
+      "PackagePath": "staticwebassets\\Image\\elemental_teaser_poster_vietnam_1_.jpg"
+    },
+    {
+      "Id": "D:\\OrderTicketFilm\\OrderTicketFilm\\wwwroot\\Image\\hfr-main-poster-printing.jpg",
+      "PackagePath": "staticwebassets\\Image\\hfr-main-poster-printing.jpg"
+    },
+    {
+      "Id": "D:\\OrderTicketFilm\\OrderTicketFilm\\wwwroot\\Image\\poster_rally_road_racers_final.jpg",
+      "PackagePath": "staticwebassets\\Image\\poster_rally_road_racers_final.jpg"
+    },
+    {
+      "Id": "D:\\OrderTicketFilm\\OrderTicketFilm\\wwwroot\\Image\\tram-nam-500_1689062334159.jpg",
+      "PackagePath": "staticwebassets\\Image\\tram-nam-500_1689062334159.jpg"
+    },
+    {
       "Id": "D:\\OrderTicketFilm\\OrderTicketFilm\\wwwroot\\css\\site.css",
       "PackagePath": "staticwebassets\\css\\site.css"
     },

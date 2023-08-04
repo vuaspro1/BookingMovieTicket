@@ -88,7 +88,7 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateRole(int id, [FromBody] Role roleUpdate)
+        public IActionResult UpdateRole(int id, [FromBody] RoleDto roleUpdate)
         {
             if (roleUpdate == null)
                 return BadRequest();

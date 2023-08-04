@@ -27,11 +27,11 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetBills()
+        public IActionResult GetBills(int page)
         {
             try
             {
-                var result = _billRepository.GetBills();
+                var result = _billRepository.GetBills(page);
                 return Ok(result);
             }
             catch
@@ -55,9 +55,9 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet("getTicketsByABill")]
-        public IActionResult GetTicketsByABill(int billId)
+        public IActionResult GetTicketsByABill(int billId, int page)
         {
-            var bill = _billRepository.GetTicketsByABill(billId);
+            var bill = _billRepository.GetTicketsByABill(billId, page);
 
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -66,7 +66,7 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateBill([FromQuery] int customerId, [FromQuery] int userId, [FromBody] BillDto billCreate)
+        public IActionResult CreateBill([FromBody] BillDto billCreate)
         {
             if (billCreate == null)
                 return BadRequest();
@@ -75,8 +75,8 @@ namespace OrderTicketFilm.Controllers
                 return BadRequest(ModelState);
 
             var billMap = _mapper.Map<Bill>(billCreate);
-            billMap.Customer = _customerRepository.GetCustomerToCheck(customerId);
-            billMap.User = _userRepository.GetUserToCheck(userId);
+            billMap.Customer = _customerRepository.GetCustomerToCheck(billCreate.CustomerId);
+            billMap.User = _userRepository.GetUserToCheck(billCreate.UserId);
 
             if (!_billRepository.CreateBill(billMap))
             {
@@ -101,6 +101,8 @@ namespace OrderTicketFilm.Controllers
                 return BadRequest();
 
             var billMap = _mapper.Map<Bill>(billUpdate);
+            billMap.Customer = _customerRepository.GetCustomerToCheck(billUpdate.CustomerId);
+            billMap.User = _userRepository.GetUserToCheck(billUpdate.UserId);
 
             if (!_billRepository.UpdateBill(billMap))
             {

@@ -1,0 +1,2 @@
+Swagger: http://pvtan0512-001-site1.ctempurl.com/index.html
+SmarterASP.Net: https://member5-4.smarterasp.net/cp/cp_screen

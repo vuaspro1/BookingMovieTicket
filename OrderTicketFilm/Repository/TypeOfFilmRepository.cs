@@ -10,6 +10,7 @@ namespace OrderTicketFilm.Repository
     {
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
+        public static int PAGE_SIZE { get; set; } = 10;
 
         public TypeOfFilmRepository(MyDbContext context, IMapper mapper)
         {
@@ -33,10 +34,22 @@ namespace OrderTicketFilm.Repository
             return Save();
         }
 
-        public ICollection<FilmDto> GetFilmsByATypeOfFilm(int typeId)
+        public ICollection<FilmView> GetFilmsByATypeOfFilm(int typeId, int page)
         {
-            var query = _context.Films.Where(f => f.TypeOfFilm.Id == typeId).ToList();
-            return _mapper.Map<List<FilmDto>>(query);
+            var films = _context.Films.Where(f => f.TypeOfFilm.Id == typeId).ToList();
+            var film = films.Select(item => new FilmView
+            {
+                Id = item.Id,
+                Name = item.Name,
+                OpeningDay = item.OpeningDay,
+                Director = item.Director,
+                Time = item.Time,
+                Image = item.Image,
+                TypeId = item.TypeOfFilm != null ? item.TypeOfFilm.Id : 0,
+                TypeName = item.TypeOfFilm != null ? item.TypeOfFilm.Name : "Unknown",
+            }).ToList();
+            var result = PaginatedList<FilmView>.Create(film.AsQueryable(), page, PAGE_SIZE);
+            return result;
         }
 
         public TypeOfFilm GetType(int id)
@@ -51,16 +64,10 @@ namespace OrderTicketFilm.Repository
             return _mapper.Map<TypeOfFilmDto>(type);
         }
 
-        public TypeOfFilmDto GetTypeOfFilmByFilm(int filmId)
-        {
-            var query = _context.Films.Where(o => o.Id == filmId).Select(c => c.TypeOfFilm).FirstOrDefault();
-            return _mapper.Map<TypeOfFilmDto>(query);
-        }
-
         public ICollection<TypeOfFilmDto> GetTypeOfFilms()
         {
-            var type = _context.TypeOfFilms.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<TypeOfFilmDto>>(type);
+            var types = _context.TypeOfFilms.OrderBy(c => c.Id).ToList();
+            return _mapper.Map<List<TypeOfFilmDto>>(types);
         }
 
         public bool Save()
@@ -78,6 +85,12 @@ namespace OrderTicketFilm.Repository
         {
             _context.Update(type);
             return Save();
+        }
+
+        public ICollection<TypeOfFilmDto> GetTypeOfFilmsToCheck()
+        {
+            var types = _context.TypeOfFilms.OrderBy(c => c.Id).ToList();
+            return _mapper.Map<List<TypeOfFilmDto>>(types);
         }
     }
 }

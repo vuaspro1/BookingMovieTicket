@@ -5,13 +5,15 @@ namespace OrderTicketFilm.Interface
 {
     public interface IShowTimeRepository
     {
-        ICollection<ShowTimeDto> GetShowTimes();
+        ICollection<ShowTimeView> GetShowTimes(int page);
+        ICollection<ShowTimeView> GetShowTimesOfNow(int page);
+        ICollection<ShowTimeView> GetShowTimesByDay(DateTime startDate, DateTime endDate, int page);
         ICollection<ShowTime> GetShowTimesToCheck();
-        ShowTimeDto GetShowTime(int id);
+        ShowTimeView GetShowTime(int id);
         ShowTime GetShowTimeToCheck(int id);
         bool ShowTimeExists(int id);
-        bool CreateShowTime(ShowTime showTime);
-        bool UpdateShowTime(ShowTime showTime);
+        bool CreateShowTime( ShowTime showTime);
+        bool UpdateShowTime( ShowTime showTime);
         bool DeleteShowTime(int id);
         bool Save();
     }

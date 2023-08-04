@@ -55,7 +55,7 @@ namespace OrderTicketFilm.Controllers
                     new Claim("UserName", user.UserName),
                     new Claim("Id", user.Id.ToString()),
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(10),
+                Expires = DateTime.UtcNow.AddMinutes(30),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey
                 (secretKeyBytes), SecurityAlgorithms.HmacSha512Signature)
             };
@@ -83,6 +83,8 @@ namespace OrderTicketFilm.Controllers
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 Roles = roleId,
+                UserName = user.UserName,
+                Name = user.Name,
             };
         }
 
@@ -167,7 +169,7 @@ namespace OrderTicketFilm.Controllers
 
                 return Ok(token);
             }
-            catch (Exception ex)
+            catch
             {
                 return BadRequest("Error");
             }

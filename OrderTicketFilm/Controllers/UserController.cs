@@ -14,19 +14,21 @@ namespace OrderTicketFilm.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly IRoleRepository _roleRepository;
 
-        public UserController(IUserRepository userRepository, IMapper mapper) 
+        public UserController(IUserRepository userRepository, IMapper mapper, IRoleRepository roleRepository) 
         {
             _userRepository = userRepository;
             _mapper = mapper;
+            _roleRepository = roleRepository;
         }
 
         [HttpGet]
-        public IActionResult GetUsers()
+        public IActionResult GetUsers(int page)
         {
             try
             {
-                var result = _userRepository.GetUsers();
+                var result = _userRepository.GetUsers(page);
                 return Ok(result);
             }
             catch
@@ -62,14 +64,26 @@ namespace OrderTicketFilm.Controllers
             return Ok(user);
         }
 
+        [HttpGet("getUsersByName")]
+        public IActionResult GetUsersByName(string name, int page)
+        {
+            var user = _userRepository.GetUsersByName(name, page);
+            if (user == null)
+                return NotFound();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(user);
+        }
+
         [HttpPost]
-        public IActionResult CreateUser([FromQuery] int roleId,[FromBody] UserDto userCreate)
+        public IActionResult CreateUser([FromBody] UserDto userCreate)
         {
             if (userCreate == null)
                 return BadRequest();
-            var user = _userRepository.GetUsers()
-                .Where(item => item.Phone.Trim().ToUpper() == userCreate.Phone.TrimEnd().ToUpper())
-                .FirstOrDefault();
+            var user = _userRepository.GetUserByPhone(userCreate.Phone);
+
             if (user != null)
             {
                 ModelState.AddModelError("", "User already exists");
@@ -81,7 +95,7 @@ namespace OrderTicketFilm.Controllers
 
             var userMap = _mapper.Map<User>(userCreate);
 
-            if (!_userRepository.CreateUser(roleId, userMap))
+            if (!_userRepository.CreateUser(userCreate, userMap))
             {
                 return BadRequest("Error");
             }
@@ -89,7 +103,7 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateUser(int id,[FromQuery] int roleId, [FromBody] UserDto userUpdate)
+        public IActionResult UpdateUser(int id, [FromBody] UserDto userUpdate)
         {
             if (userUpdate == null)
                 return BadRequest(ModelState);
@@ -105,7 +119,7 @@ namespace OrderTicketFilm.Controllers
 
             var userMap = _mapper.Map<User>(userUpdate);
 
-            if (!_userRepository.UpdateUser(roleId, userMap))
+            if (!_userRepository.UpdateUser(userUpdate, userMap))
             {
                 ModelState.AddModelError("", "Something went wrong updating owner");
                 return StatusCode(500, ModelState);

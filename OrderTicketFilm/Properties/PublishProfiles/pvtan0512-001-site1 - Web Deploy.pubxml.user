@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project>
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <EncryptedPassword />
+    <History>True|2023-08-04T07:24:47.2889309Z;False|2023-08-04T14:19:06.3491143+07:00;False|2023-08-04T14:13:15.5382706+07:00;False|2023-08-04T14:11:33.2306301+07:00;True|2023-08-03T11:44:25.4999057+07:00;True|2023-08-03T09:52:27.1726860+07:00;False|2023-08-03T09:51:25.6694293+07:00;True|2023-08-03T09:28:51.4337917+07:00;False|2023-08-03T09:28:00.2916900+07:00;False|2023-08-03T09:27:21.6448777+07:00;False|2023-08-03T09:09:56.2311846+07:00;False|2023-08-03T09:05:27.5176240+07:00;True|2023-08-02T08:29:43.1498145+07:00;False|2023-08-02T08:24:10.4137053+07:00;False|2023-08-02T08:23:02.0215104+07:00;False|2023-08-02T08:21:44.4299786+07:00;False|2023-08-02T08:20:50.3729832+07:00;True|2023-08-01T09:18:58.1133617+07:00;False|2023-08-01T09:17:57.9618941+07:00;True|2023-07-28T13:19:37.8985305+07:00;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+  <ItemGroup>
+    <DestinationConnectionStrings Include="DbConnection">
+      <Value>Data Source=SQL8005.site4now.net%3bInitial Catalog=db_a9cd37_pvtan0512%3bUser Id=db_a9cd37_pvtan0512_admin%3bPassword=Phamtan0512</Value>
+    </DestinationConnectionStrings>
+  </ItemGroup>
+  <ItemGroup>
+    <EFMigrations Include="OrderTicketFilm.Models.MyDbContext">
+      <Value>Data Source=SQL8005.site4now.net%3bInitial Catalog=db_a9cd37_pvtan0512%3bUser Id=db_a9cd37_pvtan0512_admin%3bPassword=Phamtan0512</Value>
+    </EFMigrations>
+  </ItemGroup>
+</Project>

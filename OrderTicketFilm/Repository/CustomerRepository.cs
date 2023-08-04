@@ -11,6 +11,7 @@ namespace OrderTicketFilm.Repository
     {
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
+        public static int PAGE_SIZE {  get; set; } = 10;
 
         public CustomerRepository(MyDbContext context, IMapper mapper)
         {
@@ -45,7 +46,7 @@ namespace OrderTicketFilm.Repository
             return _mapper.Map<CustomerDto>(customer);
         }
 
-        public List<CustomerDto> GetCustomerByName(string? name)
+        public ICollection<CustomerDto> GetCustomerByName(string? name, int page)
         {
             //return _context.Customers.Where(item => item.Name == name).FirstOrDefault();
             var query = _context.Customers.AsQueryable();
@@ -54,19 +55,49 @@ namespace OrderTicketFilm.Repository
             {
                 query = query.Where(e => e.Name.Contains(name));
             }
-            return _mapper.Map<List<CustomerDto>>(query);
+            var customer = query.Select(item => new CustomerDto
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Phone = item.Phone,
+                Address = item.Address,
+                DateOfBirth = item.DateOfBirth,
+            }).ToList();
+            var result = PaginatedList<CustomerDto>.Create(customer.AsQueryable(), page, PAGE_SIZE);
+            return result;
         }
 
-        public ICollection<CustomerDto> GetCustomers()
+        public ICollection<CustomerDto> GetCustomers(int page)
         {
-            var customers = _context.Customers.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<CustomerDto>>(customers);
+            var customers = _context.Customers.OrderBy(c => c.Id);
+            var customer = customers.Select(item => new CustomerDto
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Phone = item.Phone,
+                Address = item.Address,
+                DateOfBirth = item.DateOfBirth,
+            }).ToList();
+            var result = PaginatedList<CustomerDto>.Create(customer.AsQueryable(), page, PAGE_SIZE);
+            return result;
         }
 
-        public ICollection<BillDto> GetBillByACustomer(int customerId)
+        public ICollection<BillView> GetBillByACustomer(int customerId, int page)
         {
-            var bill = _context.Bills.Where(r => r.Customer.Id == customerId).ToList();
-            return _mapper.Map<List<BillDto>>(bill);
+            var bills = _context.Bills.Where(r => r.Customer.Id == customerId).ToList();
+            var bill = bills.Select(item => new BillView
+            {
+                Id = item.Id,
+                CreateDate = item.CreateDate,
+                CustomerId = item.Customer.Id,
+                UserId = item.User.Id,
+                CustomerName = item.Customer.Name,
+                UserName = item.User.Name,
+                PriceTotal = item.PriceTotal,
+                Quantity = item.Quantity,
+            }).ToList();
+            var result = PaginatedList<BillView>.Create(bill.AsQueryable(), page, PAGE_SIZE);
+            return result;
         }
 
         public bool Save()
@@ -85,6 +116,12 @@ namespace OrderTicketFilm.Repository
         {
             var customer = _context.Customers.Where(item => item.Id == id).FirstOrDefault();
             return _mapper.Map<Customer>(customer);
+        }
+
+        public ICollection<Customer> GetCustomersToCheck()
+        {
+            var customers = _context.Customers.OrderBy(c => c.Id);
+            return _mapper.Map<List<Customer>>(customers);
         }
     }
 }

@@ -27,11 +27,25 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetShowTimes()
+        public IActionResult GetShowTimes(int page)
         {
             try
             {
-                var result = _showTimeRepository.GetShowTimes();
+                var result = _showTimeRepository.GetShowTimes(page);
+                return Ok(result);
+            }
+            catch
+            {
+                return BadRequest("We can't get the showtime.");
+            }
+        }
+
+        [HttpGet("getShowTimesOfNow")]
+        public IActionResult GetShowTimesOfNow(int page)
+        {
+            try
+            {
+                var result = _showTimeRepository.GetShowTimesOfNow(page);
                 return Ok(result);
             }
             catch
@@ -54,29 +68,42 @@ namespace OrderTicketFilm.Controllers
             return Ok(showTime);
         }
 
+        [HttpGet("getShowTimesByDay")]
+        public IActionResult GetShowTimesByDay(DateTime startDate, DateTime endDate, int page)
+        {
+            var showTime = _showTimeRepository.GetShowTimesByDay(startDate, endDate, page);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(showTime);
+        }
+
         [HttpPost]
-        public IActionResult CreateShowTime([FromQuery] int roomId, [FromQuery] int filmId, [FromBody] ShowTimeDto showTimeCreate)
+        public IActionResult CreateShowTime( [FromBody] ShowTimeDto showTimeCreate)
         {
             if (showTimeCreate == null)
                 return BadRequest();
-            var showTime = _showTimeRepository.GetShowTimesToCheck()
-                .Where(item => item.Film.Id == filmId &&
-                item.Room.Id == roomId)
-                .FirstOrDefault();
-            if (showTime != null)
-            {
-                ModelState.AddModelError("", "ShowTime already exists");
-                return BadRequest(ModelState);
-            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var showTimeMap = _mapper.Map<ShowTime>(showTimeCreate);
-            showTimeMap.Room = _roomRepository.GetRoomToCheck(roomId);
-            showTimeMap.Film = _filmRepository.GetFilmToCheck(filmId);
+            showTimeMap.Film = _filmRepository.GetFilmToCheck(showTimeCreate.FilmId);
+            showTimeMap.Room = _roomRepository.GetRoomToCheck(showTimeCreate.RoomId);
 
-            if (!_showTimeRepository.CreateShowTime(showTimeMap))
+            var existingShowTime = _showTimeRepository.GetShowTimesToCheck().FirstOrDefault(item =>
+            item.Film.Id == showTimeCreate.FilmId &&
+            item.Room.Id == showTimeCreate.RoomId &&
+            item.Time == showTimeCreate.Time);
+
+            if (existingShowTime != null)
+            {
+                ModelState.AddModelError("", "ShowTime already exists");
+                return BadRequest(ModelState);
+            }
+
+            if (!_showTimeRepository.CreateShowTime( showTimeMap))
             {
                 return BadRequest("Error");
             }
@@ -99,6 +126,8 @@ namespace OrderTicketFilm.Controllers
                 return BadRequest();
 
             var showTimeMap = _mapper.Map<ShowTime>(showTimeUpdate);
+            showTimeMap.Film = _filmRepository.GetFilmToCheck(showTimeUpdate.FilmId);
+            showTimeMap.Room = _roomRepository.GetRoomToCheck(showTimeUpdate.RoomId);
 
             if (!_showTimeRepository.UpdateShowTime(showTimeMap))
             {

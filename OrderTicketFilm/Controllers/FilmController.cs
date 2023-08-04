@@ -24,11 +24,11 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetFilms()
+        public IActionResult GetFilms(int page)
         {
             try
             {
-                var result = _filmRepository.GetFilms();
+                var result = _filmRepository.GetFilms(page);
                 return Ok(result);
             }
             catch
@@ -52,9 +52,9 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet("getFilmByName")]
-        public IActionResult GetFilmByName(string name)
+        public IActionResult GetFilmByName(string name, int page)
         {
-            var film = _filmRepository.GetFilmByName(name);
+            var film = _filmRepository.GetFilmByName(name, page);
             if (!film.Any())
                 return NotFound();
 
@@ -65,9 +65,9 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet("getFilmsByATypeOfFilm")]
-        public IActionResult GetFilmsByATypeOfFilm(int typeId)
+        public IActionResult GetFilmsByATypeOfFilm(int typeId, int page)
         {
-            var type = _type.GetFilmsByATypeOfFilm(typeId);
+            var type = _type.GetFilmsByATypeOfFilm(typeId, page);
 
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -76,12 +76,12 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet("getShowTimesByAFilm")]
-        public IActionResult GetShowTimesByAFilm(int id)
+        public IActionResult GetShowTimesByAFilm(int id, int page)
         {
             if (!_filmRepository.FilmExists(id))
                 return NotFound();
 
-            var showTimes = _filmRepository.GetShowTimesByAFilm(id);
+            var showTimes = _filmRepository.GetShowTimesByAFilm(id, page);
 
             if (!ModelState.IsValid) 
                 return BadRequest(ModelState);
@@ -90,7 +90,7 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateFilm([FromQuery] int typeId, [FromBody] FilmDto filmCreate)
+        public IActionResult CreateFilm([FromBody] FilmDto filmCreate)
         {
             if (filmCreate == null)
                 return BadRequest();
@@ -99,8 +99,7 @@ namespace OrderTicketFilm.Controllers
                 return BadRequest(ModelState);
 
             var filmMap = _mapper.Map<Film>(filmCreate);
-
-            filmMap.TypeOfFilm = _type.GetType(typeId);
+            filmMap.TypeOfFilm = _type.GetType(filmCreate.TypeId);
 
             if (!_filmRepository.CreateFilm(filmMap))
             {
@@ -125,6 +124,7 @@ namespace OrderTicketFilm.Controllers
                 return BadRequest();
 
             var filmMap = _mapper.Map<Film>(filmUpdate);
+            filmMap.TypeOfFilm = _type.GetType(filmUpdate.TypeId);
 
             if (!_filmRepository.UpdateFilm(filmMap))
             {
