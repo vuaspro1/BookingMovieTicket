@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OrderTicketFilm.Dto;
@@ -10,23 +11,27 @@ namespace OrderTicketFilm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class TypeOfFilmController : Controller
     {
         private readonly ITypeOfFilmRepository _typeOfFilmRepository;
         private readonly IMapper _mapper;
+        private readonly MyDbContext _context;
 
-        public TypeOfFilmController(ITypeOfFilmRepository typeOfFilmRepository, IMapper mapper)
+        public TypeOfFilmController(ITypeOfFilmRepository typeOfFilmRepository, IMapper mapper,
+            MyDbContext context)
         {
             _typeOfFilmRepository = typeOfFilmRepository;
             _mapper = mapper;
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult GetTypeOfFilms()
+        public IActionResult GetTypeOfFilms(int page = 0, int pageSize = 10)
         {
             try
             {
-                var result = _typeOfFilmRepository.GetTypeOfFilms();
+                var result = _typeOfFilmRepository.GetTypeOfFilms(page, pageSize != 0 ? pageSize : 10);
                 return Ok(result);
             }
             catch
@@ -45,6 +50,17 @@ namespace OrderTicketFilm.Controllers
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            return Ok(type);
+        }
+
+        [HttpGet("{typeId}/films")]
+        public IActionResult GetFilmsByATypeOfFilm(int typeId, int page = 0, int pageSize = 10)
+        {
+            var type = _typeOfFilmRepository.GetFilmsByATypeOfFilm(typeId, page, pageSize != 0 ? pageSize : 10);
+
+            if (!ModelState.IsValid)
+                return BadRequest();
 
             return Ok(type);
         }
@@ -79,15 +95,25 @@ namespace OrderTicketFilm.Controllers
         {
             if (typeOfFilmUpdate == null)
                 return BadRequest();
-            if (id != typeOfFilmUpdate.Id)
-                return BadRequest();
-            if (!_typeOfFilmRepository.TypeOfFilmExists(id))
-                return NotFound();
+
             if (!ModelState.IsValid) return BadRequest();
 
-            var typeMap = _mapper.Map<TypeOfFilm>(typeOfFilmUpdate);
+            var type = _typeOfFilmRepository.GetTypeOfFilmsToCheck()
+                .Where(item => item.Name.Trim().ToUpper() == typeOfFilmUpdate.Name.TrimEnd().ToUpper())
+                .FirstOrDefault();
+            if (type != null)
+            {
+                ModelState.AddModelError("", "This type already exists");
+                return BadRequest(ModelState);
+            }
 
-            if (!_typeOfFilmRepository.UpdateTypeOfFilm(typeMap))
+            var existingType = _context.TypeOfFilms.FirstOrDefault(item => item.Id == id);
+            if (existingType == null) 
+                return NotFound();
+
+            _mapper.Map(typeOfFilmUpdate, existingType);
+
+            if (!_typeOfFilmRepository.UpdateTypeOfFilm(existingType))
             {
                 return BadRequest("Error");
             }

@@ -12,8 +12,6 @@ namespace OrderTicketFilm.Repository
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
 
-        public static int PAGE_SIZE { get; set; } = 10;
-
         public FilmRepository(MyDbContext context, IMapper mapper)
         {
             _context = context;
@@ -52,14 +50,17 @@ namespace OrderTicketFilm.Repository
                 Director = query.Director,
                 Time = query.Time,
                 Image = query.Image,
+                Description = query.Description,
                 TypeId = query.TypeOfFilm != null ? query.TypeOfFilm.Id : 0,
                 TypeName = query.TypeOfFilm != null ? query.TypeOfFilm.Name : "Unknown",
             };
         }
 
-        public ICollection<FilmView> GetFilmByName(string name, int page)
+        public PaginationDTO<FilmView> GetFilmByName(string name, int page, int pageSize)
         {
-            var films = _context.Films.Include(item => item.TypeOfFilm).AsQueryable().Where(e => e.Name.Contains(name));
+            PaginationDTO<FilmView> pagination = new PaginationDTO<FilmView>();
+            var films = _context.Films.Include(item => item.TypeOfFilm)
+                .Where(e => e.Name.Trim().ToUpper().Contains(name.TrimEnd().ToUpper()));
             var film = films.Select(item => new FilmView
             {
                 Id = item.Id,
@@ -68,15 +69,21 @@ namespace OrderTicketFilm.Repository
                 Director = item.Director,
                 Time = item.Time,
                 Image = item.Image,
+                Description = item.Description,
                 TypeId = item.TypeOfFilm != null ? item.TypeOfFilm.Id : 0,
                 TypeName = item.TypeOfFilm != null ? item.TypeOfFilm.Name : "Unknown",
             }).ToList();
-            var result = PaginatedList<FilmView>.Create(film.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<FilmView>.Create(film.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = film.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
-        public ICollection<FilmView> GetFilms(int page)
+        public PaginationDTO<FilmView> GetFilms(int page, int pageSize)
         {
+            PaginationDTO<FilmView> pagination = new PaginationDTO<FilmView>();
             var films = _context.Films.Include(item => item.TypeOfFilm).ToList();
             var film = films.Select(item => new FilmView
             {
@@ -86,11 +93,16 @@ namespace OrderTicketFilm.Repository
                 Director = item.Director,
                 Time = item.Time,
                 Image = item.Image,
+                Description = item.Description,
                 TypeId = item.TypeOfFilm != null ? item.TypeOfFilm.Id : 0,
                 TypeName = item.TypeOfFilm != null ? item.TypeOfFilm.Name : "Unknown",
             }).ToList();
-            var result = PaginatedList<FilmView>.Create(film.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<FilmView>.Create(film.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = film.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
         public Film GetFilmToCheck(int id)
@@ -99,9 +111,11 @@ namespace OrderTicketFilm.Repository
             return _mapper.Map<Film>(film);
         }
 
-        public ICollection<ShowTimeView> GetShowTimesByAFilm(int fimlid, int page)
+        public PaginationDTO<ShowTimeView> GetShowTimesByAFilm(int fimlid, int page, int pageSize)
         {
-            var showTimes = _context.ShowTimes.Where(e => e.Film.Id == fimlid).OrderBy(item => item.Time.Day).ToList();
+            PaginationDTO<ShowTimeView> pagination = new PaginationDTO<ShowTimeView>();
+            var showTimes = _context.ShowTimes.Include(item => item.Film).ThenInclude(item => item.TypeOfFilm)
+                .Include(item => item.Room).Where(e => e.Film.Id == fimlid).OrderBy(item => item.Time.Day).ToList();
             var showTime = showTimes.Select(item => new ShowTimeView
             {
                 Id = item.Id,
@@ -112,9 +126,14 @@ namespace OrderTicketFilm.Repository
                 RoomName = item.Room.Name,
                 Duration = item.Film.Time,
                 Image = item.Film.Image,
+                TypeName = item.Film.TypeOfFilm.Name,
             }).ToList();
-            var paginatedList = PaginatedList<ShowTimeView>.Create(showTime.AsQueryable(), page, PAGE_SIZE);
-            return paginatedList;
+            var result = PaginatedList<ShowTimeView>.Create(showTime.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = showTime.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
         public bool Save()

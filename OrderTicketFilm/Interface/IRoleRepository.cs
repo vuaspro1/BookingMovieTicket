@@ -5,9 +5,10 @@ namespace OrderTicketFilm.Interface
 {
     public interface IRoleRepository
     {
-        ICollection<RoleDto> GetRoles();
-        RoleDto GetRole(int id);
-        List<UserDto> GetUserByRole(int id);
+        PaginationDTO<RoleView> GetRoles(int page, int pageSize);
+        RoleView GetRole(int id);
+        Role GetRoleToCheck(int id);
+        PaginationDTO<UserView> GetUserByRole(int id, int page, int pageSize);
         ICollection<RoleDto> GetRolesByUser(int id);
         bool CreateRole(Role role);
         bool UpdateRole(Role role);

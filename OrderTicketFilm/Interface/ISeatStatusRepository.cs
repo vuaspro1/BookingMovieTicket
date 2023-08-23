@@ -5,8 +5,10 @@ namespace OrderTicketFilm.Interface
 {
     public interface ISeatStatusRepository
     {
-        ICollection<SeatStatusDto> GetSeatStatuses();
-        SeatStatus GetStatus(int id);
+        PaginationDTO<SeatStatusView> GetSeatStatuses(int page, int pageSize);
+        ICollection<SeatStatusDto> GetSeatStatusesToCheck();
+        SeatStatusView GetStatus(int id);
+        SeatStatus GetStatusToCheck(int id);
         bool SeatStatusExists(int id);
         bool CreateSeatStatus(SeatStatus seatStatus);
         bool DeleteSeatStatus(int id);

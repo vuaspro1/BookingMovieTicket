@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OrderTicketFilm.Dto;
 using OrderTicketFilm.Interface;
 using OrderTicketFilm.Models;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderTicketFilm.Repository
 {
@@ -32,16 +34,31 @@ namespace OrderTicketFilm.Repository
             return Save();
         }
 
-        public RoleDto GetRole(int id)
+        public RoleView GetRole(int id)
         {
             var role = _context.Roles.Where(item => item.Id == id).FirstOrDefault();
-            return _mapper.Map<RoleDto>(role);
+            return new RoleView
+            {
+                Id = role.Id,
+                Name = role.Name,
+            };
         }
 
-        public ICollection<RoleDto> GetRoles()
+        public PaginationDTO<RoleView> GetRoles(int page, int pageSize)
         {
+            PaginationDTO<RoleView> pagination = new PaginationDTO<RoleView>();
             var roles = _context.Roles.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<RoleDto>>(roles);
+            var role = roles.Select(item => new RoleView
+            {
+                Id=item.Id,
+                Name = item.Name,
+            }).ToList();
+            var result = PaginatedList<RoleView>.Create(role.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = role.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
         public ICollection<RoleDto> GetRolesByUser(int id)
@@ -50,10 +67,37 @@ namespace OrderTicketFilm.Repository
             return _mapper.Map<List<RoleDto>>(query);
         }
 
-        public List<UserDto> GetUserByRole(int id)
+        public Role GetRoleToCheck(int id)
         {
-            var query = _context.UserRoles.Where(item => item.RoleId == id).Select(c => c.User).ToList();
-            return _mapper.Map<List<UserDto>>(query);
+            var role = _context.Roles.Where(item => item.Id == id).FirstOrDefault();
+            return _mapper.Map<Role>(role);
+        }
+
+        public PaginationDTO<UserView> GetUserByRole(int id, int page, int pageSize)
+        {
+            PaginationDTO<UserView> pagination = new PaginationDTO<UserView>();
+            var query = _context.Users.Include(item => item.UserRoles).ThenInclude(item => item.Role)
+                .Where(item => item.UserRoles.Any(item => item.RoleId == id)).ToList();
+            var user = query.Select(item => new UserView
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Phone = item.Phone,
+                Address = item.Address,
+                DateOfBirth = item.DateOfBirth,
+                UserName = item.UserName,
+                Roles = item.UserRoles?.Select(itemRole => new RoleView
+                {
+                    Id = itemRole.Role.Id,
+                    Name = itemRole.Role.Name,
+                }).ToList()
+            }).ToList();
+            var result = PaginatedList<UserView>.Create(user.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = user.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
         public bool RoleExists(int id)

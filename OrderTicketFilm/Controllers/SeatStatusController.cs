@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OrderTicketFilm.Dto;
@@ -9,6 +10,7 @@ namespace OrderTicketFilm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class SeatStatusController : Controller
     {
         private readonly ISeatStatusRepository _seatStatus;
@@ -21,11 +23,11 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetSeatStatuses()
+        public IActionResult GetSeatStatuses(int page = 0, int pageSize = 10)
         {
             try
             {
-                var result = _seatStatus.GetSeatStatuses();
+                var result = _seatStatus.GetSeatStatuses(page, pageSize != 0 ? pageSize : 10);
                 return Ok(result);
             }
             catch
@@ -34,12 +36,26 @@ namespace OrderTicketFilm.Controllers
             }
         }
 
+        [HttpGet("{id}")]
+        public IActionResult GetSeatStatus(int id)
+        {
+            if (!_seatStatus.SeatStatusExists(id))
+                return NotFound();
+
+            var seatStatus = _seatStatus.GetStatus(id);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(seatStatus);
+        }
+
         [HttpPost]
         public IActionResult CreateStatus([FromBody] SeatStatusDto seatStatusDto)
         {
             if (seatStatusDto == null)
                 return BadRequest();
-            var status = _seatStatus.GetSeatStatuses()
+            var status = _seatStatus.GetSeatStatusesToCheck()
                 .Where(item => item.Status.Trim().ToUpper() == seatStatusDto.Status.TrimEnd().ToUpper())
                 .FirstOrDefault();
             if (status != null)
@@ -60,19 +76,19 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateStatus(int id, [FromBody] SeatStatusDto seatStatusDto)
+        public IActionResult UpdateStatus(int id, [FromBody] SeatStatusUpdate seatStatusUpdate)
         {
-            if (seatStatusDto == null)
+            if (seatStatusUpdate == null)
                 return BadRequest();
             if (!_seatStatus.SeatStatusExists(id))
                 return NotFound();
             if (!ModelState.IsValid) return BadRequest();
 
-            var statusMap = _seatStatus.GetStatus(id);
+            var statusMap = _seatStatus.GetStatusToCheck(id);
             if (statusMap == null)
                 return NotFound();
 
-            statusMap.Status = seatStatusDto.Status;
+            statusMap.Status = seatStatusUpdate.Status;
 
             if (!_seatStatus.UpdateSeatStatus(statusMap))
             {

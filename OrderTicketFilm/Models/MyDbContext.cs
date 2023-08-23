@@ -26,7 +26,6 @@ namespace OrderTicketFilm.Models
         public virtual DbSet<ShowTime> ShowTimes { get; set; }
         public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
         public virtual DbSet<Bill> Bills { get; set; }
-        public virtual DbSet<RoomStatus> RoomStatuses { get; set; }
         public virtual DbSet<SeatStatus> SeatStatuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

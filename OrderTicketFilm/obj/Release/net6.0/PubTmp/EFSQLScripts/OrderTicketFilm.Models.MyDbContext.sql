@@ -11,7 +11,7 @@ GO
 BEGIN TRANSACTION;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [Customers] (
         [Id] int NOT NULL IDENTITY,
@@ -24,7 +24,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [Roles] (
         [Id] int NOT NULL IDENTITY,
@@ -34,7 +34,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [RoomStatuses] (
         [Id] int NOT NULL IDENTITY,
@@ -45,7 +45,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [SeatStatuses] (
         [Id] int NOT NULL IDENTITY,
@@ -56,7 +56,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [TypeOfFilms] (
         [Id] int NOT NULL IDENTITY,
@@ -66,7 +66,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [Users] (
         [Id] int NOT NULL IDENTITY,
@@ -81,7 +81,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [Rooms] (
         [Id] int NOT NULL IDENTITY,
@@ -93,7 +93,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [Films] (
         [Id] int NOT NULL IDENTITY,
@@ -102,6 +102,7 @@ BEGIN
         [Director] nvarchar(max) NULL,
         [Time] nvarchar(max) NULL,
         [Image] nvarchar(max) NULL,
+        [Description] nvarchar(max) NULL,
         [TypeOfFilmId] int NOT NULL,
         CONSTRAINT [PK_Films] PRIMARY KEY ([Id]),
         CONSTRAINT [FK_Films_TypeOfFilms_TypeOfFilmId] FOREIGN KEY ([TypeOfFilmId]) REFERENCES [TypeOfFilms] ([Id]) ON DELETE CASCADE
@@ -109,7 +110,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [Bills] (
         [Id] int NOT NULL IDENTITY,
@@ -117,15 +118,15 @@ BEGIN
         [CreateDate] datetime2 NOT NULL,
         [Quantity] int NOT NULL,
         [CustomerId] int NULL,
-        [UserId] int NULL,
+        [UserId] int NOT NULL,
         CONSTRAINT [PK_Bills] PRIMARY KEY ([Id]),
         CONSTRAINT [FK_Bills_Customers_CustomerId] FOREIGN KEY ([CustomerId]) REFERENCES [Customers] ([Id]),
-        CONSTRAINT [FK_Bills_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id])
+        CONSTRAINT [FK_Bills_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
     );
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [RefreshToken] (
         [Id] uniqueidentifier NOT NULL,
@@ -142,7 +143,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [UserRoles] (
         [UserId] int NOT NULL,
@@ -154,12 +155,11 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [Seats] (
         [Id] int NOT NULL IDENTITY,
-        [Name] nvarchar(max) NULL,
-        [Status] int NULL,
+        [Name] nvarchar(max) NOT NULL,
         [Price] int NOT NULL,
         [RoomId] int NOT NULL,
         [SeatStatusId] int NOT NULL,
@@ -170,7 +170,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [ShowTimes] (
         [Id] int NOT NULL IDENTITY,
@@ -184,7 +184,7 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE TABLE [Tickets] (
         [Id] int NOT NULL IDENTITY,
@@ -199,88 +199,198 @@ BEGIN
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Bills_CustomerId] ON [Bills] ([CustomerId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Bills_UserId] ON [Bills] ([UserId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Films_TypeOfFilmId] ON [Films] ([TypeOfFilmId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_RefreshToken_UserId] ON [RefreshToken] ([UserId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Rooms_RoomStatusId] ON [Rooms] ([RoomStatusId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Seats_RoomId] ON [Seats] ([RoomId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Seats_SeatStatusId] ON [Seats] ([SeatStatusId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_ShowTimes_FilmId] ON [ShowTimes] ([FilmId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_ShowTimes_RoomId] ON [ShowTimes] ([RoomId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Tickets_BillId] ON [Tickets] ([BillId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Tickets_SeatId] ON [Tickets] ([SeatId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_Tickets_ShowTimeId] ON [Tickets] ([ShowTimeId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     CREATE INDEX [IX_UserRoles_UserId] ON [UserRoles] ([UserId]);
 END;
 GO
 
-IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230804070613_DbInit')
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230807052944_DbInit')
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-    VALUES (N'20230804070613_DbInit', N'7.0.9');
+    VALUES (N'20230807052944_DbInit', N'7.0.9');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    ALTER TABLE [Seats] DROP CONSTRAINT [FK_Seats_SeatStatuses_SeatStatusId];
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    ALTER TABLE [Tickets] DROP CONSTRAINT [FK_Tickets_Seats_SeatId];
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    ALTER TABLE [Tickets] DROP CONSTRAINT [FK_Tickets_ShowTimes_ShowTimeId];
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    DROP INDEX [IX_Seats_SeatStatusId] ON [Seats];
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    DECLARE @var0 sysname;
+    SELECT @var0 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Seats]') AND [c].[name] = N'SeatStatusId');
+    IF @var0 IS NOT NULL EXEC(N'ALTER TABLE [Seats] DROP CONSTRAINT [' + @var0 + '];');
+    ALTER TABLE [Seats] DROP COLUMN [SeatStatusId];
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    DECLARE @var1 sysname;
+    SELECT @var1 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Tickets]') AND [c].[name] = N'ShowTimeId');
+    IF @var1 IS NOT NULL EXEC(N'ALTER TABLE [Tickets] DROP CONSTRAINT [' + @var1 + '];');
+    ALTER TABLE [Tickets] ALTER COLUMN [ShowTimeId] int NULL;
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    DECLARE @var2 sysname;
+    SELECT @var2 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Tickets]') AND [c].[name] = N'SeatId');
+    IF @var2 IS NOT NULL EXEC(N'ALTER TABLE [Tickets] DROP CONSTRAINT [' + @var2 + '];');
+    ALTER TABLE [Tickets] ALTER COLUMN [SeatId] int NULL;
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    ALTER TABLE [Tickets] ADD CONSTRAINT [FK_Tickets_Seats_SeatId] FOREIGN KEY ([SeatId]) REFERENCES [Seats] ([Id]);
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    ALTER TABLE [Tickets] ADD CONSTRAINT [FK_Tickets_ShowTimes_ShowTimeId] FOREIGN KEY ([ShowTimeId]) REFERENCES [ShowTimes] ([Id]);
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812071052_DeleteRelationSeatStatus')
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20230812071052_DeleteRelationSeatStatus', N'7.0.9');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812072007_AddLocationSeat')
+BEGIN
+    ALTER TABLE [Seats] ADD [Column] int NOT NULL DEFAULT 0;
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812072007_AddLocationSeat')
+BEGIN
+    ALTER TABLE [Seats] ADD [Row] int NOT NULL DEFAULT 0;
+END;
+GO
+
+IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20230812072007_AddLocationSeat')
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20230812072007_AddLocationSeat', N'7.0.9');
 END;
 GO
 

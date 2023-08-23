@@ -12,6 +12,6 @@ namespace OrderTicketFilm.Models
         
         public virtual ICollection<Ticket>? Tickets { get; set; }
         public Customer? Customer { get; set; }
-        public User? User { get; set; }
+        public User User { get; set; }
     }
 }

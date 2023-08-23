@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OrderTicketFilm.Dto;
 using OrderTicketFilm.Interface;
 using OrderTicketFilm.Models;
@@ -10,7 +11,6 @@ namespace OrderTicketFilm.Repository
     {
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
-        public static int PAGE_SIZE { get; set; } = 10;
 
         public TypeOfFilmRepository(MyDbContext context, IMapper mapper)
         {
@@ -34,9 +34,10 @@ namespace OrderTicketFilm.Repository
             return Save();
         }
 
-        public ICollection<FilmView> GetFilmsByATypeOfFilm(int typeId, int page)
+        public PaginationDTO<FilmView> GetFilmsByATypeOfFilm(int typeId, int page, int pageSize)
         {
-            var films = _context.Films.Where(f => f.TypeOfFilm.Id == typeId).ToList();
+            PaginationDTO<FilmView> pagination = new PaginationDTO<FilmView>();
+            var films = _context.Films.Include(item => item.TypeOfFilm).Where(f => f.TypeOfFilm.Id == typeId).ToList();
             var film = films.Select(item => new FilmView
             {
                 Id = item.Id,
@@ -47,9 +48,14 @@ namespace OrderTicketFilm.Repository
                 Image = item.Image,
                 TypeId = item.TypeOfFilm != null ? item.TypeOfFilm.Id : 0,
                 TypeName = item.TypeOfFilm != null ? item.TypeOfFilm.Name : "Unknown",
+                Description = item.Description,
             }).ToList();
-            var result = PaginatedList<FilmView>.Create(film.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<FilmView>.Create(film.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = film.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
         public TypeOfFilm GetType(int id)
@@ -58,16 +64,31 @@ namespace OrderTicketFilm.Repository
             return _mapper.Map<TypeOfFilm>(type);
         }
 
-        public TypeOfFilmDto GetTypeOfFilm(int id)
+        public TypeOfFilmView GetTypeOfFilm(int id)
         {
             var type = _context.TypeOfFilms.Where(item => item.Id == id).FirstOrDefault();
-            return _mapper.Map<TypeOfFilmDto>(type);
+            return new TypeOfFilmView
+            {
+                Id = type.Id,
+                Name = type.Name,
+            };
         }
 
-        public ICollection<TypeOfFilmDto> GetTypeOfFilms()
+        public PaginationDTO<TypeOfFilmView> GetTypeOfFilms(int page, int pageSize)
         {
+            PaginationDTO<TypeOfFilmView> pagination = new PaginationDTO<TypeOfFilmView>();
             var types = _context.TypeOfFilms.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<TypeOfFilmDto>>(types);
+            var type = types.Select(item => new TypeOfFilmView
+            {
+                Id = item.Id,
+                Name = item.Name,
+            }).ToList();
+            var result = PaginatedList<TypeOfFilmView>.Create(type.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = type.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
         public bool Save()
@@ -87,10 +108,10 @@ namespace OrderTicketFilm.Repository
             return Save();
         }
 
-        public ICollection<TypeOfFilmDto> GetTypeOfFilmsToCheck()
+        public ICollection<TypeOfFilm> GetTypeOfFilmsToCheck()
         {
             var types = _context.TypeOfFilms.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<TypeOfFilmDto>>(types);
+            return _mapper.Map<List<TypeOfFilm>>(types);
         }
     }
 }

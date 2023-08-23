@@ -5,11 +5,11 @@ namespace OrderTicketFilm.Interface
 {
     public interface ITypeOfFilmRepository
     {
-        ICollection<TypeOfFilmDto> GetTypeOfFilms();
-        ICollection<TypeOfFilmDto> GetTypeOfFilmsToCheck();
-        TypeOfFilmDto GetTypeOfFilm(int id);
+        PaginationDTO<TypeOfFilmView> GetTypeOfFilms(int page, int pageSize);
+        ICollection<TypeOfFilm> GetTypeOfFilmsToCheck();
+        TypeOfFilmView GetTypeOfFilm(int id);
         TypeOfFilm GetType(int id);
-        ICollection<FilmView> GetFilmsByATypeOfFilm(int typeId, int page);
+        PaginationDTO<FilmView> GetFilmsByATypeOfFilm(int typeId, int page, int pageSize);
         bool TypeOfFilmExists(int id);
         bool CreateTypeOfFilm(TypeOfFilm type);
         bool UpdateTypeOfFilm(TypeOfFilm type);

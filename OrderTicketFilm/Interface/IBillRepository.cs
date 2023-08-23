@@ -5,14 +5,13 @@ namespace OrderTicketFilm.Interface
 {
     public interface IBillRepository
     {
-        ICollection<BillView> GetBills(int page);
+        PaginationDTO<BillView> GetBills(int page, int pageSize);
         BillView GetBill(int id);
         Bill GetBillToCheck(int id);
-        ICollection<TicketView> GetTicketsByABill(int id, int page);
+        PaginationDTO<TicketView> GetTicketsByABill(int id, int page, int pageSize);
         bool BillExists(int id);
         bool CreateBill(Bill bill);
         bool DeleteBill(int id);
-        bool UpdateBill(Bill bill);
         bool Save();
     }
 }

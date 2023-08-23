@@ -11,6 +11,6 @@ namespace OrderTicketFilm.Models
         public string? Address { get; set; }
         public DateTime DateOfBirth { get; set; }
 
-        public virtual ICollection<Bill>? Bills { get; set; }
+        public virtual ICollection<Bill> Bills { get; set; }
     }
 }

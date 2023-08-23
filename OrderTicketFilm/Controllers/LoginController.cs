@@ -20,20 +20,23 @@ namespace OrderTicketFilm.Controllers
         private readonly MyDbContext _context;
         private readonly AppSettings _appSettings;
         private readonly IRoleRepository _roleRepository;
+        private readonly IUserRepository _userRepository;
 
-        public LoginController(MyDbContext context, IOptionsMonitor<AppSettings> optionsMonitor, IRoleRepository roleRepository)  
+        public LoginController(MyDbContext context, IOptionsMonitor<AppSettings> optionsMonitor, 
+            IRoleRepository roleRepository, IUserRepository userRepository)  
         {
             _context = context;
             _appSettings = optionsMonitor.CurrentValue;
             _roleRepository = roleRepository;
+            _userRepository = userRepository;
         }
 
         [HttpPost("Login")]
         [AllowAnonymous]
         public async Task<IActionResult> Validate(LoginModel model)
         {
-            var user = _context.Users.SingleOrDefault(p => p.UserName == model.UserName
-            && p.Password == model.Password);
+            
+            var user = _userRepository.Authenticate(model.UserName, model.Password);
             if (user == null)
             {
                 return BadRequest();
@@ -63,7 +66,7 @@ namespace OrderTicketFilm.Controllers
             var accessToken = jwtTokenHandler.WriteToken(token);
             var refreshToken = GenerateRefreshToken();
             var userId = user.Id;
-            var roleId = _roleRepository.GetRolesByUser(userId);
+            var roleName = _roleRepository.GetRolesByUser(userId);
 
             var refreshTokenEntity = new RefreshToken
             {
@@ -82,9 +85,10 @@ namespace OrderTicketFilm.Controllers
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                Roles = roleId,
+                Roles = roleName,
                 UserName = user.UserName,
                 Name = user.Name,
+                UserId = userId,
             };
         }
 

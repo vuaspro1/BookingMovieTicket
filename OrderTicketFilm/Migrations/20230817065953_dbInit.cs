@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace OrderTicketFilm.Migrations
 {
     /// <inheritdoc />
-    public partial class DbInit : Migration
+    public partial class dbInit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -41,17 +41,16 @@ namespace OrderTicketFilm.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoomStatuses",
+                name: "Rooms",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RoomStatuses", x => x.Id);
+                    table.PrimaryKey("PK_Rooms", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -100,21 +99,24 @@ namespace OrderTicketFilm.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Rooms",
+                name: "Seats",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RoomStatusId = table.Column<int>(type: "int", nullable: false)
+                    Price = table.Column<int>(type: "int", nullable: false),
+                    Row = table.Column<int>(type: "int", nullable: false),
+                    Column = table.Column<int>(type: "int", nullable: false),
+                    RoomId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Rooms", x => x.Id);
+                    table.PrimaryKey("PK_Seats", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Rooms_RoomStatuses_RoomStatusId",
-                        column: x => x.RoomStatusId,
-                        principalTable: "RoomStatuses",
+                        name: "FK_Seats_Rooms_RoomId",
+                        column: x => x.RoomId,
+                        principalTable: "Rooms",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -130,6 +132,7 @@ namespace OrderTicketFilm.Migrations
                     Director = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Time = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TypeOfFilmId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -153,7 +156,7 @@ namespace OrderTicketFilm.Migrations
                     CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: true),
-                    UserId = table.Column<int>(type: "int", nullable: true)
+                    UserId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -167,7 +170,8 @@ namespace OrderTicketFilm.Migrations
                         name: "FK_Bills_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -214,35 +218,6 @@ namespace OrderTicketFilm.Migrations
                         name: "FK_UserRoles_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Seats",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: true),
-                    Price = table.Column<int>(type: "int", nullable: false),
-                    RoomId = table.Column<int>(type: "int", nullable: false),
-                    SeatStatusId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Seats", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Seats_Rooms_RoomId",
-                        column: x => x.RoomId,
-                        principalTable: "Rooms",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Seats_SeatStatuses_SeatStatusId",
-                        column: x => x.SeatStatusId,
-                        principalTable: "SeatStatuses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -326,19 +301,9 @@ namespace OrderTicketFilm.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Rooms_RoomStatusId",
-                table: "Rooms",
-                column: "RoomStatusId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Seats_RoomId",
                 table: "Seats",
                 column: "RoomId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Seats_SeatStatusId",
-                table: "Seats",
-                column: "SeatStatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ShowTimes_FilmId",
@@ -378,6 +343,9 @@ namespace OrderTicketFilm.Migrations
                 name: "RefreshToken");
 
             migrationBuilder.DropTable(
+                name: "SeatStatuses");
+
+            migrationBuilder.DropTable(
                 name: "Tickets");
 
             migrationBuilder.DropTable(
@@ -402,9 +370,6 @@ namespace OrderTicketFilm.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "SeatStatuses");
-
-            migrationBuilder.DropTable(
                 name: "Films");
 
             migrationBuilder.DropTable(
@@ -412,9 +377,6 @@ namespace OrderTicketFilm.Migrations
 
             migrationBuilder.DropTable(
                 name: "TypeOfFilms");
-
-            migrationBuilder.DropTable(
-                name: "RoomStatuses");
         }
     }
 }

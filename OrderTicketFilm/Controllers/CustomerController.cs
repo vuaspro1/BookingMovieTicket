@@ -17,21 +17,24 @@ namespace OrderTicketFilm.Controllers
     {
         private readonly ICustomerRepository _customerRepository;
         private readonly IMapper _mapper;
+        private readonly MyDbContext _context;
 
-        public CustomerController(ICustomerRepository customerRepository, IMapper mapper)
+        public CustomerController(ICustomerRepository customerRepository, IMapper mapper,
+            MyDbContext context)
         {
             _customerRepository = customerRepository;
             _mapper = mapper;
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult GetCustomers(int page)
+        public IActionResult GetCustomers(int page = 0, int pageSize = 10)
         {
             try
             {
                 //var result = _mapper.Map<List<CustomerDto>>(_customerRepository.GetCustomers());
                 //return Ok(result);
-                var result = _customerRepository.GetCustomers(page);
+                var result = _customerRepository.GetCustomers(page, pageSize != 0 ? pageSize : 10);
                 return Ok(result);
             }
             catch
@@ -54,11 +57,11 @@ namespace OrderTicketFilm.Controllers
             return Ok(customer);
         }
 
-        [HttpGet("getCustomerByName")]
-        public IActionResult GetCustomerByName(string? name, int page)
+        [HttpGet("{search}/customers")]
+        public IActionResult GetCustomerBySearch(string search, int page = 0, int pageSize = 10)
         {
-            var customer = _customerRepository.GetCustomerByName(name, page);
-            if (!customer.Any())
+            var customer = _customerRepository.GetCustomerBySearch(search, page, pageSize != 0 ? pageSize : 10);
+            if (customer == null )
                 return NotFound();
 
             if (!ModelState.IsValid)
@@ -67,13 +70,13 @@ namespace OrderTicketFilm.Controllers
             return Ok(customer);
         }
 
-        [HttpGet("getBillsByACustomer")]
-        public IActionResult GetBillsByACustomer(int id, int page)
+        [HttpGet("{id}/bills")]
+        public IActionResult GetBillsByACustomer(int id, int page = 0, int pageSize = 10)
         {
             if (!_customerRepository.CustomerExists(id))
                 return NotFound();
 
-            var bills = _customerRepository.GetBillByACustomer(id, page);
+            var bills = _customerRepository.GetBillByACustomer(id, page, pageSize != 0 ? pageSize : 10);
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -91,7 +94,7 @@ namespace OrderTicketFilm.Controllers
                 .FirstOrDefault();
             if (customer != null)
             {
-                ModelState.AddModelError("","Customer already exists");
+                ModelState.AddModelError("","Phone already exists");
                 return BadRequest(ModelState);
             }
             if (!ModelState.IsValid)
@@ -111,15 +114,16 @@ namespace OrderTicketFilm.Controllers
         {
             if (customerUpdate == null)
                 return BadRequest();
-            if (id != customerUpdate.Id)
-                return BadRequest();
-            if (!_customerRepository.CustomerExists(id))
-                return NotFound();
+
             if (!ModelState.IsValid) return BadRequest();
 
-            var customerMap = _mapper.Map<Customer>(customerUpdate);
+            var existingCustomer = _context.Customers.FirstOrDefault(item => item.Id == id);
+            if (existingCustomer == null) 
+                return NotFound();
 
-            if (!_customerRepository.UpdateCustomer(customerMap))
+            _mapper.Map(customerUpdate, existingCustomer);
+
+            if (!_customerRepository.UpdateCustomer(existingCustomer))
             {
                 return BadRequest("Error");
             }

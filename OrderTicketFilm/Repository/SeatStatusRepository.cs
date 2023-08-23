@@ -31,16 +31,39 @@ namespace OrderTicketFilm.Repository
             return Save();
         }
 
-        public ICollection<SeatStatusDto> GetSeatStatuses()
+        public PaginationDTO<SeatStatusView> GetSeatStatuses(int page, int pageSize)
         {
-            var status = _context.SeatStatuses.OrderBy(c => c.Id).ToList();
-            return _mapper.Map<List<SeatStatusDto >>(status);
+            PaginationDTO<SeatStatusView> pagination = new PaginationDTO<SeatStatusView>();
+            var statuses = _context.SeatStatuses.OrderBy(c => c.Id).ToList();
+            var status = statuses.Select(item => new SeatStatusView
+            {
+                Id = item.Id,
+                Status = item.Status,
+                Code = item.Code,
+            }).ToList();
+            var result = PaginatedList<SeatStatusView>.Create(status.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = status.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
-        public SeatStatus GetStatus(int id)
+        public SeatStatus GetStatusToCheck(int id)
         {
             var status = _context.SeatStatuses.Where(item => item.Id == id).FirstOrDefault();
             return _mapper.Map<SeatStatus>(status);
+        }
+
+        public SeatStatusView GetStatus(int id)
+        {
+            var status = _context.SeatStatuses.Where(item => item.Id == id).FirstOrDefault();
+            return new SeatStatusView
+            {
+                Id = status.Id,
+                Status = status.Status,
+                Code = status.Code,
+            };
         }
 
         public bool Save()
@@ -67,6 +90,12 @@ namespace OrderTicketFilm.Repository
             statusMap.Status = seatStatus.Status;
             _context.Update(seatStatus);
             return Save();
+        }
+
+        public ICollection<SeatStatusDto> GetSeatStatusesToCheck()
+        {
+            var status = _context.SeatStatuses.ToList();
+            return _mapper.Map<List<SeatStatusDto>>(status);
         }
     }
 }

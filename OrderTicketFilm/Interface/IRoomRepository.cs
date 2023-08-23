@@ -5,12 +5,13 @@ namespace OrderTicketFilm.Interface
 {
     public interface IRoomRepository
     {
-        ICollection<RoomDto> GetRooms(int page);
-        ICollection<RoomDto> GetRoomsToCheck();
-        RoomDto GetRoom(int id);
+        PaginationDTO<RoomView> GetRooms(int page, int pageSize);
+        ICollection<Room> GetRoomsToCheck();
+        RoomView GetRoom(int id);
+        RoomView GetRoomByShowTimeId(int showTimeId);
         Room GetRoomToCheck(int roomId);
-        ICollection<SeatDto> GetSeatsByARoom(int roomId);
-        ICollection<ShowTimeView> GetShowTimesByARoom(int roomId, int page);
+        ICollection<SeatView> GetSeatsByARoom(int roomId);
+        PaginationDTO<ShowTimeView> GetShowTimesByARoom(int roomId, int page, int pageSize);
         bool RoomExists(int id);
         bool CreateRoom(Room room);
         bool UpdateRoom(Room room);

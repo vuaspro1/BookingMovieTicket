@@ -11,7 +11,6 @@ namespace OrderTicketFilm.Repository
     {
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
-        public static int PAGE_SIZE { get; set; } = 10;
 
         public TicketRepository(MyDbContext context, IMapper mapper) 
         {
@@ -26,7 +25,8 @@ namespace OrderTicketFilm.Repository
 
         public bool DeleteTicket(int id)
         {
-            var deleteTicket = _context.Tickets.SingleOrDefault(item => item.Id == id);
+            var deleteTicket = _context.Tickets.FirstOrDefault(item => item.Id == id);
+            
             if (deleteTicket != null)
             {
                 _context.Tickets.Remove(deleteTicket);
@@ -49,29 +49,56 @@ namespace OrderTicketFilm.Repository
                 SeatName = ticket.Seat.Name,
                 FilmName = ticket.ShowTime.Film.Name,
                 RoomName = ticket.ShowTime.Room.Name,
-                Price = ticket.Seat.Price
+                Price = ticket.Seat.Price,
+                RoomId = ticket.ShowTime.Room != null ? ticket.ShowTime.Room.Id : 0,
             };
         }
 
-        public ICollection<TicketView> GetTickets(int page)
+        public PaginationDTO<TicketView> GetTickets(int page, int pageSize)
         {
+            PaginationDTO<TicketView> pagination = new PaginationDTO<TicketView>();
             var querys = _context.Tickets.Include(item => item.Bill).Include(item => item.ShowTime)
                 .ThenInclude(item => item.Film).Include(item => item.Seat)
                 .ThenInclude(item => item.Room).ToList();
             var query = querys.Select(item => new TicketView
             {
                 Id = item.Id,
-                SeatId = item.Seat.Id,
-                ShowTimeId = item.ShowTime.Id,
-                BillId = item.Bill.Id,
-                ShowTime = item.ShowTime.Time,
-                SeatName = item.Seat.Name,
-                FilmName = item.ShowTime.Film.Name,
-                RoomName = item.ShowTime.Room.Name,
-                Price = item.Seat.Price
+                SeatId = item.Seat != null ? item.Seat.Id : 0,
+                ShowTimeId = item.ShowTime != null ? item.ShowTime.Id : 0,
+                BillId = item.Bill != null ? item.Bill.Id : 0,  
+                ShowTime = item.ShowTime != null ? item.ShowTime.Time : DateTime.MinValue,  
+                SeatName = item.Seat != null ? item.Seat.Name : string.Empty,  
+                FilmName = item.ShowTime != null ? item.ShowTime.Film.Name : string.Empty, 
+                RoomName = item.ShowTime != null ? item.ShowTime.Room.Name : string.Empty,  
+                Price = item.Seat != null ? item.Seat.Price : 0,
+                RoomId = item.ShowTime.Room != null ? item.ShowTime.Room.Id : 0,
             }).ToList();
-            var result = PaginatedList<TicketView>.Create(query.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<TicketView>.Create(query.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = query.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
+        }
+
+        public ICollection<TicketView> GetTicketsByShowTime(int showTimeId)
+        {
+            var tickets = _context.Tickets.Include(item => item.Bill).Include(item => item.ShowTime).Include(item => item.Seat)
+                .ThenInclude(item => item.Room).Where(item => item.ShowTime.Id == showTimeId).ToList();
+            return tickets.Select(item => new TicketView
+            {
+                Id = item.Id,
+                BillId = item.Bill.Id,
+                SeatId = item.Seat != null ? item.Seat.Id : 0,
+                ShowTimeId = item.ShowTime != null ? item.ShowTime.Id : 0,
+                RoomId = item.ShowTime.Room != null ? item.ShowTime.Room.Id : 0,
+            }).ToList();
+        }
+
+        public ICollection<Ticket> GetTicketsToCheck()
+        {
+            var ticket = _context.Tickets.ToList();
+            return _mapper.Map<List<Ticket>>(ticket);
         }
 
         public bool Save()

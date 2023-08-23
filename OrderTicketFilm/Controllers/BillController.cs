@@ -1,37 +1,46 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OrderTicketFilm.Dto;
 using OrderTicketFilm.Interface;
 using OrderTicketFilm.Models;
 using OrderTicketFilm.Repository;
+using System.Net.Sockets;
 
 namespace OrderTicketFilm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class BillController : Controller
     {
         private readonly IBillRepository _billRepository;
         private readonly IMapper _mapper;
         private readonly ICustomerRepository _customerRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ITicketRepository _ticketRepository;
+        private readonly MyDbContext _context;
 
         public BillController(IBillRepository billRepository, IMapper mapper,
-            ICustomerRepository customerRepository, IUserRepository userRepository) 
+            ICustomerRepository customerRepository, IUserRepository userRepository,
+            ITicketRepository ticketRepository, MyDbContext context) 
         {
             _billRepository = billRepository;
             _mapper = mapper;
             _customerRepository = customerRepository;
             _userRepository = userRepository;
+            _ticketRepository = ticketRepository;
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult GetBills(int page)
+        public IActionResult GetBills(int page = 0, int pageSize = 10)
         {
             try
             {
-                var result = _billRepository.GetBills(page);
+                var result = _billRepository.GetBills(page, pageSize != 0 ? pageSize : 10);
                 return Ok(result);
             }
             catch
@@ -54,10 +63,10 @@ namespace OrderTicketFilm.Controllers
             return Ok(bill);
         }
 
-        [HttpGet("getTicketsByABill")]
-        public IActionResult GetTicketsByABill(int billId, int page)
+        [HttpGet("{billId}/tickets")]
+        public IActionResult GetTicketsByABill(int billId, int page = 0, int pageSize = 10)
         {
-            var bill = _billRepository.GetTicketsByABill(billId, page);
+            var bill = _billRepository.GetTicketsByABill(billId, page, pageSize != 0 ? pageSize : 10);
 
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -66,50 +75,63 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateBill([FromBody] BillDto billCreate)
+        public IActionResult CreateBill([FromBody] BillBuilderDTO billBuilderDTO)
         {
-            if (billCreate == null)
+            if (billBuilderDTO == null)
                 return BadRequest();
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var billMap = _mapper.Map<Bill>(billCreate);
-            billMap.Customer = _customerRepository.GetCustomerToCheck(billCreate.CustomerId);
-            billMap.User = _userRepository.GetUserToCheck(billCreate.UserId);
-
-            if (!_billRepository.CreateBill(billMap))
+            foreach (var itemTicketBuilder in billBuilderDTO.TicketBuilders)
             {
-                return BadRequest("Error");
+                var tickets = _context.Tickets.Include(item => item.Seat).Include(item => item.ShowTime)
+                    .Where(item => item.ShowTime.Id == itemTicketBuilder.ShowTimeId && item.Seat.Id == itemTicketBuilder.SeatId)
+                    .FirstOrDefault();
+                if (tickets != null)
+                {
+                    ModelState.AddModelError("", "Ticket already exists");
+                    return BadRequest(ModelState);
+                }
             }
-            return Ok("Successfully");
-        }
 
-        [HttpPut("{id}")]
-        public IActionResult UpdateBill(int id, [FromBody] BillDto billUpdate)
-        {
-            if (billUpdate == null)
-                return BadRequest(ModelState);
+            var billMap = _mapper.Map<Bill>(billBuilderDTO);
+            billMap.Customer = _customerRepository.GetCustomerToCheck(billBuilderDTO.CustomerId);
+            billMap.User = _userRepository.GetUserToCheck(billBuilderDTO.UserId);
 
-            if (id != billUpdate.Id)
-                return BadRequest(ModelState);
+            var ticketsToAdd = new List<Ticket>(); 
 
-            if (!_billRepository.BillExists(id))
-                return NotFound();
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var billMap = _mapper.Map<Bill>(billUpdate);
-            billMap.Customer = _customerRepository.GetCustomerToCheck(billUpdate.CustomerId);
-            billMap.User = _userRepository.GetUserToCheck(billUpdate.UserId);
-
-            if (!_billRepository.UpdateBill(billMap))
+            foreach (var itemTicketBuilder in billBuilderDTO.TicketBuilders)
             {
-                ModelState.AddModelError("", "Something went wrong updating review");
-                return StatusCode(500, ModelState);
+                var seat = _context.Seats.Find(itemTicketBuilder.SeatId);
+                var showTime = _context.ShowTimes.Find(itemTicketBuilder.ShowTimeId);
+
+                if (seat != null && showTime != null)
+                {
+                    var newTicket = new Ticket
+                    {
+                        Seat = seat,
+                        ShowTime = showTime,
+                    };
+
+                    ticketsToAdd.Add(newTicket);
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Invalid seat or show time ID");
+                    return BadRequest(ModelState);
+                }
             }
-            return Ok("Successfully");
+
+            billMap.Tickets = ticketsToAdd;
+
+            var newBill = _billRepository.CreateBill(billMap);
+            if (!newBill)
+            {
+                return BadRequest("Error creating bill");
+            }
+
+            else return Ok("Successfully");
         }
 
         [HttpDelete("{id}")]

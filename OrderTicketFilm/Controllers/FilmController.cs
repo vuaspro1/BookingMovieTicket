@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OrderTicketFilm.Dto;
@@ -10,25 +11,29 @@ namespace OrderTicketFilm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class FilmController : Controller
     {
         private readonly IFilmRepository _filmRepository;
         private readonly IMapper _mapper;
+        private readonly MyDbContext _context;
         private readonly ITypeOfFilmRepository _type;
 
-        public FilmController(IFilmRepository filmRepository, ITypeOfFilmRepository typeOfFilmRepository, IMapper mapper)
+        public FilmController(IFilmRepository filmRepository, ITypeOfFilmRepository typeOfFilmRepository, 
+            IMapper mapper, MyDbContext context)
         {
             _type = typeOfFilmRepository;
             _filmRepository = filmRepository;
             _mapper = mapper; 
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult GetFilms(int page)
+        public IActionResult GetFilms(int page = 0, int pageSize = 10)
         {
             try
             {
-                var result = _filmRepository.GetFilms(page);
+                var result = _filmRepository.GetFilms(page, pageSize != 0 ? pageSize : 10);
                 return Ok(result);
             }
             catch
@@ -51,11 +56,11 @@ namespace OrderTicketFilm.Controllers
             return Ok(film);
         }
 
-        [HttpGet("getFilmByName")]
-        public IActionResult GetFilmByName(string name, int page)
+        [HttpGet("{name}/films")]
+        public IActionResult GetFilmByName(string name, int page = 0, int pageSize = 10)
         {
-            var film = _filmRepository.GetFilmByName(name, page);
-            if (!film.Any())
+            var film = _filmRepository.GetFilmByName(name, page, pageSize != 0 ? pageSize : 10);
+            if (film == null)
                 return NotFound();
 
             if (!ModelState.IsValid)
@@ -64,24 +69,13 @@ namespace OrderTicketFilm.Controllers
             return Ok(film);
         }
 
-        [HttpGet("getFilmsByATypeOfFilm")]
-        public IActionResult GetFilmsByATypeOfFilm(int typeId, int page)
-        {
-            var type = _type.GetFilmsByATypeOfFilm(typeId, page);
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            return Ok(type);
-        }
-
-        [HttpGet("getShowTimesByAFilm")]
-        public IActionResult GetShowTimesByAFilm(int id, int page)
+        [HttpGet("{id}/showTimes")]
+        public IActionResult GetShowTimesByAFilm(int id, int page = 0, int pageSize = 10)
         {
             if (!_filmRepository.FilmExists(id))
                 return NotFound();
 
-            var showTimes = _filmRepository.GetShowTimesByAFilm(id, page);
+            var showTimes = _filmRepository.GetShowTimesByAFilm(id, page, pageSize != 0 ? pageSize : 10);
 
             if (!ModelState.IsValid) 
                 return BadRequest(ModelState);
@@ -114,19 +108,17 @@ namespace OrderTicketFilm.Controllers
             if (filmUpdate == null)
                 return BadRequest(ModelState);
 
-            if (id != filmUpdate.Id)
-                return BadRequest(ModelState);
-
-            if (!_filmRepository.FilmExists(id))
-                return NotFound();
-
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            var filmMap = _mapper.Map<Film>(filmUpdate);
-            filmMap.TypeOfFilm = _type.GetType(filmUpdate.TypeId);
+            var existingFilm = _context.Films.FirstOrDefault(item => item.Id == id);
+            if (existingFilm == null)
+                return NotFound();
 
-            if (!_filmRepository.UpdateFilm(filmMap))
+            _mapper.Map(filmUpdate, existingFilm);
+            existingFilm.TypeOfFilm = _type.GetType(filmUpdate.TypeId);
+
+            if (!_filmRepository.UpdateFilm(existingFilm))
             {
                 ModelState.AddModelError("", "Something went wrong updating review");
                 return StatusCode(500, ModelState);

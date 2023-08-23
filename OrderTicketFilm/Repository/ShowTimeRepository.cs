@@ -4,6 +4,7 @@ using OrderTicketFilm.Dto;
 using OrderTicketFilm.Interface;
 using OrderTicketFilm.Models;
 using System;
+using System.Drawing.Printing;
 using System.Net.Sockets;
 
 namespace OrderTicketFilm.Repository
@@ -13,7 +14,6 @@ namespace OrderTicketFilm.Repository
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
         public static DateTime Now { get; }
-        public static int PAGE_SIZE { get; set; } = 10;
 
         public ShowTimeRepository(MyDbContext context, IMapper mapper) 
         {
@@ -39,7 +39,7 @@ namespace OrderTicketFilm.Repository
 
         public ShowTimeView GetShowTime(int id)
         {
-            var showTime = _context.ShowTimes.Include(s => s.Film).Include(s => s.Room)
+            var showTime = _context.ShowTimes.Include(s => s.Film).ThenInclude(s => s.TypeOfFilm).Include(s => s.Room)
                                           .FirstOrDefault(s => s.Id == id);
             return new ShowTimeView
             {
@@ -51,12 +51,15 @@ namespace OrderTicketFilm.Repository
                 RoomName = showTime.Room.Name,
                 Duration = showTime.Film.Time,
                 Image = showTime.Film.Image,
+                TypeName = showTime.Film.TypeOfFilm.Name
             };
         }
 
-        public ICollection<ShowTimeView> GetShowTimes(int page)
+        public PaginationDTO<ShowTimeView> GetShowTimes(int page, int pageSize)
         {
-            var showtimes = _context.ShowTimes.Include(s => s.Film).Include(s => s.Room).OrderBy(s => s.Time.Date).ToList();
+            PaginationDTO<ShowTimeView> pagination = new PaginationDTO<ShowTimeView>();
+            var showtimes = _context.ShowTimes.Include(s => s.Film).ThenInclude(s => s.TypeOfFilm)
+                .Include(s => s.Room).OrderBy(s => s.Time.Date).ToList();
             var showTime = showtimes.Select(item => new ShowTimeView
             {
                 Id = item.Id,
@@ -67,18 +70,23 @@ namespace OrderTicketFilm.Repository
                 RoomName = item.Room.Name,
                 Duration = item.Film.Time,
                 Image = item.Film.Image,
+                TypeName = item.Film.TypeOfFilm.Name
             }).ToList();
-            var result = PaginatedList<ShowTimeView>.Create(showTime.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<ShowTimeView>.Create(showTime.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = showTime.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
         public ICollection<ShowTime> GetShowTimesToCheck()
         {
-            var showTimes = _context.ShowTimes.OrderBy(c => c.Id).ToList();
+            var showTimes = _context.ShowTimes.Include(item => item.Film).Include(item => item.Room).OrderBy(c => c.Id).ToList();
             return _mapper.Map<List<ShowTime>>(showTimes);
         }
 
-        public ShowTime GetShowTimeToCheck(int id)
+        public ShowTime GetShowTimeToCheck(int? id)
         {
             var showTime = _context.ShowTimes.Where(item => item.Id == id).FirstOrDefault();
             return _mapper.Map<ShowTime>(showTime);
@@ -101,40 +109,22 @@ namespace OrderTicketFilm.Repository
             return Save();
         }
 
-        public ICollection<ShowTimeView> GetShowTimesOfNow(int page)
+        public PaginationDTO<ShowTimeView> GetShowTimesByDay(DateTime startDate, DateTime endDate, int page, int pageSize)
         {
-            DateTime localDate = DateTime.Now;
-            var showtimes = _context.ShowTimes.Include(s => s.Film).Include(s => s.Room).ToList();
-            showtimes = showtimes.Where(item => item.Time > localDate).OrderBy(item => item.Time.Date).ToList();
-            var showTimes = showtimes.Select(item => new ShowTimeView
-            {
-                Id = item.Id,
-                RoomId = item.Room.Id,
-                FilmId = item.Film.Id,
-                Time = item.Time,
-                FilmName = item.Film.Name,
-                RoomName = item.Room.Name,
-                Duration = item.Film.Time,
-                Image = item.Film.Image,
-            }).ToList();  
-            var result = PaginatedList<ShowTimeView>.Create(showTimes.AsQueryable(), page, PAGE_SIZE);
-            return result;
-        }
-
-        public ICollection<ShowTimeView> GetShowTimesByDay(DateTime startDate, DateTime endDate, int page)
-        {
+            PaginationDTO<ShowTimeView> pagination = new PaginationDTO<ShowTimeView>();
             List<ShowTime> showTimes;
 
             if (startDate.Date == endDate.Date)
             {
                 // Lấy tất cả suất chiếu trong startDate nếu startDate bằng endDate
-                showTimes = _context.ShowTimes.Where(item => item.Time.Date == startDate.Date).ToList();
+                showTimes = _context.ShowTimes.Include(item => item.Film).ThenInclude(item => item.TypeOfFilm)
+                    .Include(item => item.Room).Where(item => item.Time.Date == startDate.Date).ToList();
             }
             else
             {
                 // Lấy tất cả suất chiếu trong khoảng từ startDate đến endDate
-                showTimes = _context.ShowTimes
-                    .Where(item => item.Time.Date >= startDate.Date && item.Time.Date <= endDate.Date)
+                showTimes = _context.ShowTimes.Include(item => item.Film).ThenInclude(item => item.TypeOfFilm)
+                    .Include(item => item.Room).Where(item => item.Time.Date >= startDate.Date && item.Time.Date <= endDate.Date)
                     .OrderBy(item => item.Time.Date).ToList();
             }
 
@@ -148,9 +138,14 @@ namespace OrderTicketFilm.Repository
                 RoomName = item.Room.Name,
                 Duration = item.Film.Time,
                 Image = item.Film.Image,
+                TypeName = item.Film.TypeOfFilm.Name
             }).ToList();
-            var result = PaginatedList<ShowTimeView>.Create(showTime.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<ShowTimeView>.Create(showTime.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = showTime.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
     }
 }

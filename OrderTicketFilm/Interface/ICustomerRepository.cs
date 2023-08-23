@@ -5,12 +5,12 @@ namespace OrderTicketFilm.Interface
 {
     public interface ICustomerRepository
     {
-        ICollection<CustomerDto> GetCustomers(int page);
+        PaginationDTO<CustomerView> GetCustomers(int page, int pageSize);
         ICollection<Customer> GetCustomersToCheck();
-        CustomerDto GetCustomer(int id);
+        CustomerView GetCustomer(int id);
         Customer GetCustomerToCheck(int id);
-        ICollection<CustomerDto> GetCustomerByName(string name, int page);
-        ICollection<BillView> GetBillByACustomer(int customerId, int page);
+        PaginationDTO<CustomerView> GetCustomerBySearch(string search, int page, int pageSize);
+        PaginationDTO<BillView> GetBillByACustomer(int customerId, int page, int pageSize);
         bool CustomerExists(int id);
         bool CreateCustomer(Customer customer);
         bool UpdateCustomer(Customer customer);

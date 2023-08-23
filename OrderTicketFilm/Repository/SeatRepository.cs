@@ -24,7 +24,7 @@ namespace OrderTicketFilm.Repository
 
         public bool DeleteSeat(int id)
         {
-            var deleteSeat = _context.Seats.SingleOrDefault(item => item.Id == id);
+            var deleteSeat = _context.Seats.FirstOrDefault(item => item.Id == id);
             if (deleteSeat != null)
             {
                 _context.Seats.Remove(deleteSeat);
@@ -32,30 +32,46 @@ namespace OrderTicketFilm.Repository
             return Save();
         }
 
-        public SeatDto GetSeat(int id)
+        public SeatView GetSeat(int id)
         {
             var seat = _context.Seats.Where(item => item.Id == id).FirstOrDefault();
-            return new SeatDto
+            return new SeatView
             {
-                Id = seat.Id,
-                Name = seat.Name,
-                Price = seat.Price,
-                Status = seat.Status,
-                RoomId = seat.Room.Id
+                Id = seat != null ? seat.Id : 0,
+                Name = seat != null ? seat.Name : "Unknown",
+                Price = seat != null ? seat.Price : 0,
+                RoomId = seat != null ? seat.Room.Id : 0,
+                Row = seat != null ? seat.Row : 0,
+                Column = seat != null ? seat.Column : 0,
             };
         }
 
-        public ICollection<SeatDto> GetSeats()
+        public PaginationDTO<SeatView> GetSeats(int page, int pageSize)
         {
-            var seat = _context.Seats.Include(item => item.Room).OrderBy(c => c.Id).ToList();
-            return seat.Select(item => new SeatDto
+            PaginationDTO<SeatView> pagination = new PaginationDTO<SeatView>();
+            var seats = _context.Seats.Include(item => item.Room)
+                .OrderBy(c => c.Id).ToList();
+            var seat = seats.Select(item => new SeatView
             {
                 Id = item.Id,
                 Name = item.Name,
                 Price = item.Price,
-                Status = item.Status,
-                RoomId = item.Room.Id
+                RoomId = item.Room.Id,
+                Row = item.Row,
+                Column = item.Column,
             }).ToList();
+            var result = PaginatedList<SeatView>.Create(seat.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = seat.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
+        }
+
+        public ICollection<SeatDto> GetSeatsToCheck()
+        {
+            var seats = _context.Seats.ToList();
+            return _mapper.Map<List<SeatDto>>(seats);
         }
 
         public Seat GetSeatToCheck(int id)
@@ -72,7 +88,7 @@ namespace OrderTicketFilm.Repository
 
         public bool SeatExists(int id)
         {
-            return _context.TypeOfFilms.Any(c => c.Id == id);
+            return _context.Seats.Any(c => c.Id == id);
         }
 
         public bool UpdateSeat(Seat seat)

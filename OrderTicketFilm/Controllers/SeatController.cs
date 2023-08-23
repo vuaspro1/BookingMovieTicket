@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OrderTicketFilm.Dto;
@@ -10,25 +11,32 @@ namespace OrderTicketFilm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class SeatController : Controller
     {
         private readonly ISeatRepository _seatRepository;
         private readonly IMapper _mapper;
         private readonly IRoomRepository _roomRepository;
+        private readonly ISeatStatusRepository _seatStatus;
+        private readonly MyDbContext _context;
 
-        public SeatController(ISeatRepository seatRepository, IMapper mapper, IRoomRepository roomRepository) 
+        public SeatController(ISeatRepository seatRepository, IMapper mapper, 
+            IRoomRepository roomRepository, ISeatStatusRepository seatStatusRepository,
+            MyDbContext context) 
         {
             _seatRepository = seatRepository;
             _mapper = mapper;
             _roomRepository = roomRepository;
+            _seatStatus = seatStatusRepository;
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult GetSeats()
+        public IActionResult GetSeats(int page = 0, int pageSize = 10)
         {
             try
             {
-                var result = _seatRepository.GetSeats();
+                var result = _seatRepository.GetSeats(page, pageSize != 0 ? pageSize : 10);
                 return Ok(result);
             }
             catch
@@ -37,29 +45,29 @@ namespace OrderTicketFilm.Controllers
             }
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetSeat(int id)
-        {
-            if (!_seatRepository.SeatExists(id))
-                return NotFound();
+        //[HttpGet("{id}")]
+        //public IActionResult GetSeat(int id)
+        //{
+        //    if (!_seatRepository.SeatExists(id))
+        //        return NotFound();
 
-            var seat = _seatRepository.GetSeat(id);
+        //    var seat = _seatRepository.GetSeat(id);
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+        //    if (!ModelState.IsValid)
+        //        return BadRequest(ModelState);
 
-            return Ok(seat);
-        }
+        //    return Ok(seat);
+        //}
+
 
         [HttpPost]
         public IActionResult CreateSeat( [FromBody] SeatDto seatCreate)
         {
             if (seatCreate == null)
                 return BadRequest();
-            var seat = _seatRepository.GetSeats()
+            var seat = _seatRepository.GetSeatsToCheck()
                 .Where(item => item.Name.Trim().ToUpper() == seatCreate.Name.TrimEnd().ToUpper() &&
-                item.RoomId == seatCreate.RoomId)
-                .FirstOrDefault();
+                item.RoomId == seatCreate.RoomId && item.Column == seatCreate.Column && item.Row == seatCreate.Row).FirstOrDefault();
             if (seat != null)
             {
                 ModelState.AddModelError("", "Seat already exists");
@@ -85,19 +93,17 @@ namespace OrderTicketFilm.Controllers
             if (seatUpdate == null)
                 return BadRequest(ModelState);
 
-            if (id != seatUpdate.Id)
-                return BadRequest(ModelState);
-
-            if (!_seatRepository.SeatExists(id))
-                return NotFound();
-
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            var seatMap = _mapper.Map<Seat>(seatUpdate);
-            seatMap.Room = _roomRepository.GetRoomToCheck(seatUpdate.RoomId);
+            var existingSeat = _context.Seats.Where(item => item.Id == id).FirstOrDefault();
+            if (existingSeat == null)
+                return NotFound();
 
-            if (!_seatRepository.UpdateSeat(seatMap))
+            _mapper.Map(seatUpdate, existingSeat);
+            existingSeat.Room = _roomRepository.GetRoomToCheck(seatUpdate.RoomId);
+
+            if (!_seatRepository.UpdateSeat(existingSeat))
             {
                 ModelState.AddModelError("", "Something went wrong updating review");
                 return StatusCode(500, ModelState);
@@ -106,7 +112,7 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteFilm(int id)
+        public IActionResult DeleteSeat(int id)
         {
             if (!_seatRepository.SeatExists(id))
             {

@@ -42,7 +42,7 @@ namespace OrderTicketFilm.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -88,6 +88,9 @@ namespace OrderTicketFilm.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Director")
                         .HasColumnType("nvarchar(max)");
@@ -180,35 +183,9 @@ namespace OrderTicketFilm.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoomStatusId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("RoomStatusId");
 
                     b.ToTable("Rooms");
-                });
-
-            modelBuilder.Entity("OrderTicketFilm.Models.RoomStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RoomStatuses");
                 });
 
             modelBuilder.Entity("OrderTicketFilm.Models.Seat", b =>
@@ -219,7 +196,11 @@ namespace OrderTicketFilm.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("Column")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Price")
@@ -228,17 +209,12 @@ namespace OrderTicketFilm.Migrations
                     b.Property<int>("RoomId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SeatStatusId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Status")
+                    b.Property<int>("Row")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RoomId");
-
-                    b.HasIndex("SeatStatusId");
 
                     b.ToTable("Seats");
                 });
@@ -394,7 +370,9 @@ namespace OrderTicketFilm.Migrations
 
                     b.HasOne("OrderTicketFilm.Models.User", "User")
                         .WithMany("Bills")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Customer");
 
@@ -423,17 +401,6 @@ namespace OrderTicketFilm.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("OrderTicketFilm.Models.Room", b =>
-                {
-                    b.HasOne("OrderTicketFilm.Models.RoomStatus", "RoomStatus")
-                        .WithMany("Rooms")
-                        .HasForeignKey("RoomStatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RoomStatus");
-                });
-
             modelBuilder.Entity("OrderTicketFilm.Models.Seat", b =>
                 {
                     b.HasOne("OrderTicketFilm.Models.Room", "Room")
@@ -442,15 +409,7 @@ namespace OrderTicketFilm.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("OrderTicketFilm.Models.SeatStatus", "SeatStatus")
-                        .WithMany("Seats")
-                        .HasForeignKey("SeatStatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Room");
-
-                    b.Navigation("SeatStatus");
                 });
 
             modelBuilder.Entity("OrderTicketFilm.Models.ShowTime", b =>
@@ -541,19 +500,9 @@ namespace OrderTicketFilm.Migrations
                     b.Navigation("ShowTimes");
                 });
 
-            modelBuilder.Entity("OrderTicketFilm.Models.RoomStatus", b =>
-                {
-                    b.Navigation("Rooms");
-                });
-
             modelBuilder.Entity("OrderTicketFilm.Models.Seat", b =>
                 {
                     b.Navigation("Tickets");
-                });
-
-            modelBuilder.Entity("OrderTicketFilm.Models.SeatStatus", b =>
-                {
-                    b.Navigation("Seats");
                 });
 
             modelBuilder.Entity("OrderTicketFilm.Models.ShowTime", b =>

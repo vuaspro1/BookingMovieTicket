@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OrderTicketFilm.Dto;
@@ -10,25 +11,27 @@ namespace OrderTicketFilm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class UserController : Controller
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
-        private readonly IRoleRepository _roleRepository;
+        private readonly MyDbContext _context;
 
-        public UserController(IUserRepository userRepository, IMapper mapper, IRoleRepository roleRepository) 
+        public UserController(IUserRepository userRepository, IMapper mapper,
+            MyDbContext context) 
         {
             _userRepository = userRepository;
             _mapper = mapper;
-            _roleRepository = roleRepository;
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult GetUsers(int page)
+        public IActionResult GetUsers(int page = 0, int pageSize = 10)
         {
             try
             {
-                var result = _userRepository.GetUsers(page);
+                var result = _userRepository.GetUsers(page, pageSize != 0 ? pageSize : 10);
                 return Ok(result);
             }
             catch
@@ -51,23 +54,10 @@ namespace OrderTicketFilm.Controllers
             return Ok(user);
         }
 
-        [HttpGet("getUserByPhone")]
-        public IActionResult GetUserByPhone(string phone)
+        [HttpGet("{search}/users")]
+        public IActionResult GetUsersBySearch(string search, int page = 0, int pageSize = 10)
         {
-            var user = _userRepository.GetUserByPhone(phone);
-            if (user == null)
-                return NotFound();
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(user);
-        }
-
-        [HttpGet("getUsersByName")]
-        public IActionResult GetUsersByName(string name, int page)
-        {
-            var user = _userRepository.GetUsersByName(name, page);
+            var user = _userRepository.GetUsersBySearch(search, page, pageSize != 0 ? pageSize : 10);
             if (user == null)
                 return NotFound();
 
@@ -82,11 +72,18 @@ namespace OrderTicketFilm.Controllers
         {
             if (userCreate == null)
                 return BadRequest();
-            var user = _userRepository.GetUserByPhone(userCreate.Phone);
+            var userByPhone = _userRepository.GetUserByPhone(userCreate.Phone);
+            var userByUserName = _userRepository.GetUsersToCheck().FirstOrDefault(item => item.UserName == userCreate.UserName);
 
-            if (user != null)
+            if (userByPhone != null)
             {
-                ModelState.AddModelError("", "User already exists");
+                ModelState.AddModelError("", "Phone already exists");
+                return BadRequest(ModelState);
+            }
+
+            if (userByUserName != null)
+            {
+                ModelState.AddModelError("", "UserName already exists");
                 return BadRequest(ModelState);
             }
 
@@ -95,7 +92,7 @@ namespace OrderTicketFilm.Controllers
 
             var userMap = _mapper.Map<User>(userCreate);
 
-            if (!_userRepository.CreateUser(userCreate, userMap))
+            if (!_userRepository.CreateUser(userMap))
             {
                 return BadRequest("Error");
             }
@@ -103,23 +100,30 @@ namespace OrderTicketFilm.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateUser(int id, [FromBody] UserDto userUpdate)
+        public IActionResult UpdateUser(int id, [FromBody] UserUpdate userUpdate)
         {
             if (userUpdate == null)
                 return BadRequest(ModelState);
 
-            if (id != userUpdate.Id)
-                return BadRequest(ModelState);
+            var user = _userRepository.GetUserByPhone(userUpdate.Phone);
 
-            if (!_userRepository.UserExists(id))
-                return NotFound();
+            if (user != null )
+            { 
+                ModelState.AddModelError("", "Phone already exists");
+                return BadRequest(ModelState);
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            var userMap = _mapper.Map<User>(userUpdate);
+            var existingUser = _context.Users.FirstOrDefault(item => item.Id == id);
+            if (existingUser == null)
+                return NotFound();
 
-            if (!_userRepository.UpdateUser(userUpdate, userMap))
+            _mapper.Map(userUpdate, existingUser);
+            existingUser.UserName = _userRepository.GetUser(id).UserName;
+
+            if (!_userRepository.UpdateUser( existingUser))
             {
                 ModelState.AddModelError("", "Something went wrong updating owner");
                 return StatusCode(500, ModelState);

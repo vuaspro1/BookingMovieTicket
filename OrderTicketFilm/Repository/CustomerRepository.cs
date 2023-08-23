@@ -11,8 +11,6 @@ namespace OrderTicketFilm.Repository
     {
         private readonly MyDbContext _context;
         private readonly IMapper _mapper;
-        public static int PAGE_SIZE {  get; set; } = 10;
-
         public CustomerRepository(MyDbContext context, IMapper mapper)
         {
             _context = context;
@@ -33,29 +31,39 @@ namespace OrderTicketFilm.Repository
         public bool DeleteCustomer(int id)
         {
             var deleteCustomer = _context.Customers.SingleOrDefault(item => item.Id == id);
+            var deleteBill = _context.Bills.Include(item => item.Customer).FirstOrDefault(item => item.Customer.Id == id);
             if (deleteCustomer != null)
             {
                 _context.Customers.Remove(deleteCustomer);
+                if ( deleteBill != null)
+                {
+                    _context.Bills.Remove(deleteBill);
+                }
             }
             return Save();
         }
 
-        public CustomerDto GetCustomer(int id)
+        public CustomerView GetCustomer(int id)
         {
             var customer = _context.Customers.Where(item => item.Id == id).FirstOrDefault();
-            return _mapper.Map<CustomerDto>(customer);
+            return new CustomerView
+            {
+                Id = customer.Id,
+                Name = customer.Name,
+                Phone = customer.Phone,
+                Address = customer.Address,
+                DateOfBirth = customer.DateOfBirth,
+            };
         }
 
-        public ICollection<CustomerDto> GetCustomerByName(string? name, int page)
+        public PaginationDTO<CustomerView> GetCustomerBySearch(string search, int page, int pageSize)
         {
+            PaginationDTO<CustomerView> pagination = new PaginationDTO<CustomerView>();
             //return _context.Customers.Where(item => item.Name == name).FirstOrDefault();
-            var query = _context.Customers.AsQueryable();
+            var query = _context.Customers.Where(item => item.Name.Trim().ToUpper().Contains(search.TrimEnd().ToUpper())
+            || item.Address.Trim().ToUpper().Contains(search.TrimEnd().ToUpper()));
 
-            if (!string.IsNullOrEmpty(name))
-            {
-                query = query.Where(e => e.Name.Contains(name));
-            }
-            var customer = query.Select(item => new CustomerDto
+            var customer = query.Select(item => new CustomerView
             {
                 Id = item.Id,
                 Name = item.Name,
@@ -63,14 +71,19 @@ namespace OrderTicketFilm.Repository
                 Address = item.Address,
                 DateOfBirth = item.DateOfBirth,
             }).ToList();
-            var result = PaginatedList<CustomerDto>.Create(customer.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<CustomerView>.Create(customer.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = customer.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
-        public ICollection<CustomerDto> GetCustomers(int page)
+        public PaginationDTO<CustomerView> GetCustomers(int page, int pageSize)
         {
+            PaginationDTO<CustomerView> pagination = new PaginationDTO<CustomerView>();
             var customers = _context.Customers.OrderBy(c => c.Id);
-            var customer = customers.Select(item => new CustomerDto
+            var customer = customers.Select(item => new CustomerView
             {
                 Id = item.Id,
                 Name = item.Name,
@@ -78,26 +91,38 @@ namespace OrderTicketFilm.Repository
                 Address = item.Address,
                 DateOfBirth = item.DateOfBirth,
             }).ToList();
-            var result = PaginatedList<CustomerDto>.Create(customer.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<CustomerView>.Create(customer.AsQueryable(), page, pageSize);
+
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = customers.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
+
         }
 
-        public ICollection<BillView> GetBillByACustomer(int customerId, int page)
+        public PaginationDTO<BillView> GetBillByACustomer(int customerId, int page, int pageSize)
         {
-            var bills = _context.Bills.Where(r => r.Customer.Id == customerId).ToList();
+            PaginationDTO<BillView> pagination = new PaginationDTO<BillView>();
+            var bills = _context.Bills.Include(item => item.Customer).Include(item => item.User)
+                .Where(r => r.Customer.Id == customerId).ToList();
             var bill = bills.Select(item => new BillView
             {
                 Id = item.Id,
                 CreateDate = item.CreateDate,
                 CustomerId = item.Customer.Id,
-                UserId = item.User.Id,
-                CustomerName = item.Customer.Name,
-                UserName = item.User.Name,
+                UserId = item.User.Id ,
+                CustomerName = item.Customer.Name  ,
+                UserName = item.User.Name ,
                 PriceTotal = item.PriceTotal,
                 Quantity = item.Quantity,
             }).ToList();
-            var result = PaginatedList<BillView>.Create(bill.AsQueryable(), page, PAGE_SIZE);
-            return result;
+            var result = PaginatedList<BillView>.Create(bill.AsQueryable(), page, pageSize);
+            pagination.data = result;
+            pagination.page = page;
+            pagination.totalItem = bill.Count();
+            pagination.pageSize = pageSize;
+            return pagination;
         }
 
         public bool Save()
@@ -120,7 +145,7 @@ namespace OrderTicketFilm.Repository
 
         public ICollection<Customer> GetCustomersToCheck()
         {
-            var customers = _context.Customers.OrderBy(c => c.Id);
+            var customers = _context.Customers.OrderBy(c => c.Id).ToList();
             return _mapper.Map<List<Customer>>(customers);
         }
     }

@@ -7,12 +7,14 @@ using OrderTicketFilm.Interface;
 using OrderTicketFilm.Models;
 using OrderTicketFilm.Repository;
 using System.Text;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
+builder.Services.AddAutoMapper(typeof(Program));
 //builder.Services.AddIdentity<Role, User>().AddEntityFrameworkStores<MyDbContext>()
 //    .AddDefaultTokenProviders();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => 
@@ -65,8 +67,8 @@ builder.Services.AddScoped<ISeatRepository, SeatRepository>();
 builder.Services.AddScoped<IShowTimeRepository, ShowTimeRepository>();
 builder.Services.AddScoped<IBillRepository, BillRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
-builder.Services.AddScoped<IRoomStatusRepository, RoomStatusRepository>();
 builder.Services.AddScoped<ISeatStatusRepository, SeatStatusRepository>();
+builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 var secretKey = builder.Configuration["AppSettings:SecretKey"];
@@ -105,6 +107,7 @@ app.UseAuthorization();
 app.UseCors(x => x.AllowAnyOrigin()
 .AllowAnyMethod()
 .AllowAnyHeader());
+//app.UseMiddleware<AutoMapperMiddleware>();
 
 //app.UseMiddleware<UserController>();
 

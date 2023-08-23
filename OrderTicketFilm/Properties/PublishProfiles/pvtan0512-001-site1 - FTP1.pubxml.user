@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project>
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <EncryptedPassword />
+    <_PublishTargetUrl>ftp://win8014.site4now.net:21/site1</_PublishTargetUrl>
+    <History>False|2023-08-18T02:23:47.7881931Z;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+  <ItemGroup>
+    <DestinationConnectionStrings Include="DbConnection">
+      <Value>Data Source=SQL8005.site4now.net%3bInitial Catalog=db_a9cd37_pvtan0512%3bUser Id=db_a9cd37_pvtan0512_admin%3bPassword=Phamtan0512</Value>
+    </DestinationConnectionStrings>
+  </ItemGroup>
+  <ItemGroup>
+    <EFMigrations Include="OrderTicketFilm.Models.MyDbContext">
+      <Value>Data Source=SQL8005.site4now.net%3bInitial Catalog=db_a9cd37_pvtan0512%3bUser Id=db_a9cd37_pvtan0512_admin%3bPassword=Phamtan0512</Value>
+    </EFMigrations>
+  </ItemGroup>
+</Project>

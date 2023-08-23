@@ -5,12 +5,11 @@ namespace OrderTicketFilm.Interface
 {
     public interface ITicketRepository
     {
-        ICollection<TicketView> GetTickets(int page);
+        PaginationDTO<TicketView> GetTickets(int page, int pageSize);
+        ICollection<Ticket> GetTicketsToCheck();
+        ICollection<TicketView> GetTicketsByShowTime(int showTimeId);
         TicketView GetTicket(int id);
         bool TicketExists(int id);
-        bool CreateTicket(Ticket ticket);
-        bool UpdateTicket(Ticket ticket);
-        bool DeleteTicket(int id);
         bool Save();
     }
 }
